@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
-import React, { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-expo";
-import { Slot, Stack, useRouter, useSegments } from "expo-router";
+import { Slot, useRouter, useSegments } from "expo-router";
+import React, { useEffect } from "react";
+import { Text, View } from "react-native";
 
 export default function InitialLayout() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -13,7 +13,7 @@ export default function InitialLayout() {
     if (!isLoaded) {
       return;
     }
-    
+
     const inAuthGroup = segement[0] === "(auth)";
     const inOnboarding = segement[0] === "onboarding";
 
@@ -29,7 +29,11 @@ export default function InitialLayout() {
   }, [isSignedIn, segement]);
 
   if (!isLoaded) {
-    return null;
+    return (
+      <View>
+        <Text>Loading...</Text>
+      </View>
+    );
   }
   return <Slot />;
 }
