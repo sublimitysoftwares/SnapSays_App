@@ -15,6 +15,7 @@ import {
   GenerateCaptionResponse,
   useGenerateCaption,
 } from "../hooks/useGenerateCaption";
+import SocialButtons from "./SocialButtons";
 
 interface ImageUploadProps {
   onUploadSuccess?: (imageUrl: string) => void;
@@ -80,25 +81,43 @@ export default function ImageUpload({
   const { mutate: generateCaption, isPending: uploading } =
     useGenerateCaption();
 
-  const handleUpload = useCallback(() => {
-    if (!selectedImage) {
-      Alert.alert("No Image", "Please select an image first.");
-      return;
-    }
+  const handleUpload = useCallback(
+    (description: string) => {
+      if (!selectedImage) {
+        Alert.alert("No Image", "Please select an image first.");
+        return;
+      }
 
-    generateCaption(selectedImage, {
-      onSuccess: (data: GenerateCaptionResponse) => {
-        onUploadSuccess?.(data.caption || data.imageUrl || "");
-        Alert.alert("Success", "Caption generated successfully");
-        setSelectedImage(null);
-      },
-      onError: (err: Error) => {
-        const message = err.message || "Upload failed";
-        onUploadError?.(message);
-        Alert.alert("Error", message);
-      },
-    });
-  }, [selectedImage, generateCaption, onUploadSuccess, onUploadError]);
+      generateCaption(
+        { selectedImage, description },
+        {
+          onSuccess: (data: GenerateCaptionResponse) => {
+            onUploadSuccess?.(data.caption || data.imageUrl || "");
+            Alert.alert("Success", "Caption generated successfully");
+            setSelectedImage(null);
+          },
+          onError: (err: Error) => {
+            const message = err.message || "Upload failed";
+            onUploadError?.(message);
+            Alert.alert("Error", message);
+          },
+        },
+      );
+    },
+    [selectedImage, generateCaption, onUploadSuccess, onUploadError],
+  );
+
+  const shareToLinkedIn = (data: string) => {
+    const personalityKnowledge = "";
+    const description = `You are a professional LinkedIn copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 LinkedIn posts aligned with their visual presence, professional personality profile, and emotional state. Each post must be ready to publish, vary in tone, and include relevant hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
+    handleUpload(description);
+  };
+
+  const shareToInstagram = (data: string) => {
+    const personalityKnowledge = "";
+    const description = `You are a professional Instagram copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 Instagram captions aligned with their visual presence, personality profile, and emotional state. Each caption must be ready to post, vary in tone, and include suitable hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
+    handleUpload(description);
+  };
 
   return (
     <View className="w-full">
@@ -119,31 +138,23 @@ export default function ImageUpload({
         </View>
       )}
 
-      {selectedImage ? (
-        <TouchableOpacity
-          onPress={handleUpload}
-          disabled={uploading}
-          className={`bg-indigo-600 py-4 rounded-2xl flex-row justify-center items-center ${
-            uploading ? "opacity-50" : ""
-          }`}
-        >
-          {uploading ? (
-            <>
-              <ActivityIndicator color="#fff" />
-              <Text className="ml-2 text-white font-bold text-lg">
-                Uploading…
-              </Text>
-            </>
-          ) : (
-            <>
-              <Ionicons name="cloud-upload-outline" size={24} color="white" />
-              <Text className="ml-2 text-white font-bold text-lg">
-                Upload Image
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      ) : (
+      {selectedImage && !uploading && (
+        <SocialButtons
+          shareToLinkedIn={shareToLinkedIn}
+          shareToInstagram={shareToInstagram}
+        />
+      )}
+
+      {uploading && (
+        <View className="py-8 items-center justify-center">
+          <ActivityIndicator size="large" color="#4f46e5" />
+          <Text className="mt-4 text-indigo-600 font-medium text-center">
+            Generating your social content...
+          </Text>
+        </View>
+      )}
+
+      {!selectedImage && !uploading && (
         <TouchableOpacity
           onPress={() => setShowOptions(true)}
           className="bg-indigo-600 py-4 rounded-2xl flex-row justify-center items-center"

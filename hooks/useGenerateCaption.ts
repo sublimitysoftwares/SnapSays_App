@@ -8,8 +8,14 @@ export interface GenerateCaptionResponse {
 }
 
 export const useGenerateCaption = () => {
-  return useMutation<GenerateCaptionResponse, Error, string>({
-    mutationFn: async (selectedImage: string) => {
+  return useMutation({
+    mutationFn: async ({
+      selectedImage,
+      description,
+    }: {
+      selectedImage: string;
+      description: string;
+    }) => {
       if (!selectedImage) {
         throw new Error("No image selected");
       }
@@ -17,26 +23,36 @@ export const useGenerateCaption = () => {
       const fileInfo = await FileSystem.getInfoAsync(selectedImage);
       if (!fileInfo.exists) throw new Error("File not found");
 
-      const response = await FileSystem.uploadAsync(
-        "http://10.134.90.40:5000/api/generate-caption",
-        selectedImage,
+      const formData = new FormData();
+      formData.append("file", {
+        uri: selectedImage,
+        name: selectedImage.split("/").pop() || "image.jpg",
+        type: "image/jpeg",
+      } as any);
+      formData.append("description", description);
+
+      const response = await fetch(
+        process.env.EXPO_PUBLIC_API_URL ||
+          "http://192.168.43.133:5000/api/generate-caption",
         {
-          fieldName: "file",
-          httpMethod: "POST",
-          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+          },
         },
       );
 
-      if (response.status < 200 || response.status >= 300) {
+      if (!response.ok) {
         let errorMessage = "Upload failed";
         try {
-          const errorData = JSON.parse(response.body);
+          const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
         } catch (e) {}
         throw new Error(`${errorMessage} (${response.status})`);
       }
 
-      return JSON.parse(response.body);
+      return response.json();
     },
   });
 };

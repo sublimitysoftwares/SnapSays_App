@@ -1,3 +1,4 @@
+import { useAuth as useClerkAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Button, ScrollView, Text, View } from "react-native";
@@ -7,26 +8,75 @@ import "../global.css";
 
 export default function Index() {
   const { setIsSignedIn } = useAuth();
-  const [caption, setCaption] = useState<string | null>(null);
+  const { signOut } = useClerkAuth();
+  interface CaptionData {
+    caption: string;
+    hashtags: string[];
+  }
+
+  const [caption, setCaption] = useState<CaptionData[] | null>(null);
 
   const handleUploadSuccess = (data: string) => {
     console.log("Image uploaded successfully:", data);
-    setCaption(data);
+    processCaptionData(data);
+  };
+
+  const processCaptionData = (captionData: any) => {
+    try {
+      if (typeof captionData === "string") {
+        const cleaned = captionData.replace(/```json\n?|\n?```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+
+        const normalized = (Array.isArray(parsed) ? parsed : [parsed]).map(
+          (item: any) => ({
+            caption: item.caption || item.post || "",
+            hashtags: Array.isArray(item.hashtags) ? item.hashtags : [],
+          }),
+        );
+
+        setCaption(normalized);
+      } else {
+        const rawData = Array.isArray(captionData)
+          ? captionData
+          : [captionData];
+
+        const normalized = rawData.map((item: any) => ({
+          caption: item.caption || item.post || "",
+          hashtags: Array.isArray(item.hashtags) ? item.hashtags : [],
+        }));
+
+        setCaption(normalized);
+      }
+    } catch (e) {
+      console.error("Failed to parse caption JSON", e);
+
+      setCaption([
+        {
+          caption: typeof captionData === "string" ? captionData : "",
+          hashtags: [],
+        },
+      ]);
+    }
   };
 
   const handleUploadError = (error: string) => {
     console.error("Upload error:", error);
   };
 
-  const handleSignOut = () => {
-    setIsSignedIn(false);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsSignedIn(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <View className="flex-1 p-6">
-        {/* Header */}
-        <View className="mb-8">
+      <View className="mb-8">
+        <View className="flex-1 p-6">
+          {/* Header */}
           <Text className="text-3xl font-black text-gray-800 mb-2">
             Upload Image
           </Text>
@@ -42,43 +92,60 @@ export default function Index() {
         />
 
         {/* Uploaded Image URL Display */}
-        {caption && (
-          <View className="mt-8 bg-white rounded-3xl p-3 shadow-sm border border-indigo-50">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center">
+        {caption &&
+          Array.isArray(caption) &&
+          caption.map((item: any, index: number) => (
+            <View
+              key={index}
+              className="mt-8 bg-white rounded-3xl p-3 shadow-sm border border-indigo-50"
+            >
+              <View className="flex-row items-center justify-between mb-4">
                 <View className="w-10 h-10 bg-indigo-50 rounded-full items-center justify-center mr-3">
                   <Ionicons name="sparkles" size={20} color="#6366f1" />
                 </View>
-                <Text className="text-xl font-bold text-gray-800">
-                  Magic Caption
+                <View className="flex-row items-center">
+                  <Text className="text-xl font-bold text-gray-800">
+                    Magic Caption
+                  </Text>
+                </View>
+                <View className="bg-green-100 px-3 py-1 rounded-full">
+                  <Text className="text-green-700 text-xs font-bold uppercase">
+                    Success
+                  </Text>
+                </View>
+              </View>
+
+              <View className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                <Text className="text-gray-800 text-lg leading-7 font-medium italic">
+                  "{item.caption}"
+                </Text>
+                {item.hashtags && item.hashtags.length > 0 && (
+                  <View className="flex-row flex-wrap mt-3">
+                    {item.hashtags.map((tag: string, idx: number) => (
+                      <Text
+                        key={idx}
+                        className="text-indigo-500 font-semibold mr-2 mt-1"
+                      >
+                        #{tag}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              <View className="mt-4 flex-row justify-end items-center">
+                <Ionicons
+                  name="logo-snapchat"
+                  size={16}
+                  color="#818cf8"
+                  className="mr-1"
+                />
+                <Text className="text-indigo-400 text-xs font-bold tracking-wider">
+                  GENERATED BY SNAPSAYS
                 </Text>
               </View>
-              <View className="bg-green-100 px-3 py-1 rounded-full">
-                <Text className="text-green-700 text-xs font-bold uppercase">
-                  Success
-                </Text>
-              </View>
             </View>
-
-            <View className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <Text className="text-gray-800 text-lg leading-7 font-medium italic">
-                "{caption}"
-              </Text>
-            </View>
-
-            <View className="mt-4 flex-row justify-end items-center">
-              <Ionicons
-                name="logo-snapchat"
-                size={16}
-                color="#818cf8"
-                className="mr-1"
-              />
-              <Text className="text-indigo-400 text-xs font-bold tracking-wider">
-                GENERATED BY SNAPSAYS
-              </Text>
-            </View>
-          </View>
-        )}
+          ))}
 
         {/* Sign Out Button */}
         <View className="mt-8">
