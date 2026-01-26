@@ -1,28 +1,65 @@
-import React from 'react';
-import { View, TextInput, Text, TextInputProps } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+    Text,
+    TextInput,
+    TextInputProps,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 interface InputFieldProps extends TextInputProps {
   label: string;
-  iconName: keyof typeof Ionicons.glyphMap;
+  iconName?: keyof typeof Ionicons.glyphMap;
   error?: string;
+  showIcon?: boolean;
 }
 
-export default function InputField({ label, iconName, error, ...props }: InputFieldProps) {
+export default function InputField({
+  label,
+  iconName,
+  error,
+  showIcon = false,
+  secureTextEntry,
+  ...props
+}: InputFieldProps) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   return (
     <View className="mb-4">
-      <Text className="text-gray-700 font-medium mb-1 text-base ml-1">{label}</Text>
+      <Text className="text-gray-400 font-medium mb-1.5 text-base ml-1">
+        {label}
+      </Text>
       <View
-        className={`flex-row items-center bg-white/80 rounded-2xl px-4 py-3 border ${
-          error ? 'border-red-500' : 'border-gray-200'
-        } focus:border-indigo-500 shadow-sm`}
+        className={`flex-row items-center bg-white rounded-full px-5 py-3.5 border ${
+          error ? "border-red-500" : "border-gray-100"
+        } shadow-sm`}
       >
-        <Ionicons name={iconName} size={20} color="#6366f1" className="mr-3" />
+        {iconName && showIcon && (
+          <Ionicons
+            name={iconName}
+            size={20}
+            color="#9ca3af"
+            className="mr-3"
+          />
+        )}
         <TextInput
-          className="flex-1 text-gray-800 text-base py-0"
-          placeholderTextColor="#9ca3af"
+          className="flex-1 text-gray-800 text-[15px] py-0"
+          placeholderTextColor="#cbd5e1"
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
           {...props}
         />
+        {secureTextEntry && (
+          <TouchableOpacity
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <Ionicons
+              name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
+              size={22}
+              color="#9ca3af"
+            />
+          </TouchableOpacity>
+        )}
       </View>
       {error && <Text className="text-red-500 text-sm mt-1 ml-1">{error}</Text>}
     </View>

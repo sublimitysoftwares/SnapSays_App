@@ -1,43 +1,81 @@
-import React, { useState } from 'react';
+import { useSSO } from "@clerk/clerk-expo";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
-  View,
-  Text,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
+  Text,
   TouchableOpacity,
-  Image,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSSO } from "@clerk/clerk-expo";
+  View,
+} from "react-native";
+import * as z from "zod";
 
-import InputField from '../../components/InputField';
-import CustomButton from '../../components/CustomButton';
-import SocialButton from '../../components/SocialButton';
+import CustomButton from "../../components/CustomButton";
+import InputField from "../../components/InputField";
+import SocialButton from "../../components/SocialButton";
+
+const signupSchema = z
+  .object({
+    fullName: z.string().min(2, "Full name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { startSSOFlow } = useSSO();
-  
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleSignUp = async () => {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    reset();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, [reset]);
+
+  const onSignUp = (data: SignupFormData) => {
     setLoading(true);
-    // TODO: Implement email/password signup
+    console.log("Signup data:", data);
+    // Simulate API call
     setTimeout(() => {
       setLoading(false);
       router.replace("/onboarding");
     }, 1500);
   };
 
-  const handleGoogleSignUp = async () => {
+  const handleSSO = async (strategy: "oauth_google" | "oauth_facebook") => {
     try {
       setLoading(true);
       const { createdSessionId, setActive } = await startSSOFlow({
-        strategy: "oauth_google",
+        strategy: strategy,
       });
 
       if (createdSessionId) {
@@ -52,98 +90,143 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View className="flex-1">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1 bg-[#FAFAFA]"
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FFB347"]}
+            tintColor="#FFB347"
+          />
+        }
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          <View className="flex-1 px-6 justify-center py-10">
-            {/* Header Section */}
-            <View className="items-center mb-10">
-              <View className="w-24 h-24 mb-4">
-                <Image 
-                  source={require('../../assets/images/logoMain.png')} 
-                  className="w-full h-full"
-                  resizeMode="contain"
+        <View className="px-8 pt-12 pb-10">
+          {/* Header Section */}
+          <View className="mb-10">
+            <Text className="text-[#1A1A1A] text-3xl font-bold mb-2">
+              Sign Up Account
+            </Text>
+            <Text className="text-gray-400 text-base">
+              Hello, Welcome back to our account!
+            </Text>
+          </View>
+
+          {/* Form Section */}
+          <View>
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <InputField
+                  label="Full Name"
+                  placeholder="Shariar Hossain"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.fullName?.message}
                 />
-              </View>
-              <Text className="text-white text-4xl font-black tracking-tight">
-                SnapSays
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <InputField
+                  label="Email"
+                  placeholder="uixshariar@gmail.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.email?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <InputField
+                  label="Create Password"
+                  placeholder="**********"
+                  secureTextEntry
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.password?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <InputField
+                  label="Confirm Password"
+                  placeholder="**********"
+                  secureTextEntry
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.confirmPassword?.message}
+                />
+              )}
+            />
+
+            <CustomButton
+              title="Sign Up"
+              onPress={handleSubmit(onSignUp)}
+              loading={loading}
+              variant="orange"
+              className="mt-4"
+            />
+
+            <View className="flex-row items-center my-8">
+              <View className="flex-1 h-[1px] bg-gray-200" />
+              <Text className="mx-4 text-gray-400 font-medium">
+                Or Sign Up With
               </Text>
-              <Text className="text-indigo-200 text-lg">
-                Create your account today
-              </Text>
+              <View className="flex-1 h-[1px] bg-gray-200" />
             </View>
 
-            {/* Form Section */}
-            <View className="bg-white/10 p-6 rounded-[40px] border border-white/20 backdrop-blur-xl">
-              <Text className="text-white text-2xl font-bold mb-6 text-center">
-                Create Account
-              </Text>
-              
-              <InputField
-                label="Full Name"
-                iconName="person-outline"
-                placeholder="John Doe"
-                autoCapitalize="words"
-                value={fullName}
-                onChangeText={setFullName}
+            {/* Social Login Buttons */}
+            <View className="flex-row gap-4">
+              <SocialButton
+                type="facebook"
+                onPress={() => handleSSO("oauth_facebook" as any)}
               />
-
-              <InputField
-                label="Email Address"
-                iconName="mail-outline"
-                placeholder="name@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
+              <SocialButton
+                type="google"
+                onPress={() => handleSSO("oauth_google")}
               />
-
-              <InputField
-                label="Password"
-                iconName="lock-closed-outline"
-                placeholder="••••••••"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
-
-              <CustomButton
-                title="Sign Up"
-                onPress={handleSignUp}
-                loading={loading}
-              />
-
-              <View className="flex-row items-center my-8">
-                <View className="flex-1 h-[1px] bg-white/20" />
-                <Text className="mx-4 text-white/50 font-medium">Or continue with</Text>
-                <View className="flex-1 h-[1px] bg-white/20" />
-              </View>
-
-              {/* Social Login Buttons */}
-              <View className="flex-row space-x-4 gap-4">
-                <SocialButton type="google" onPress={handleGoogleSignUp} />
-                {/* <SocialButton type="apple" onPress={() => {}} /> */}
-              </View>
-            </View>
-
-            {/* Footer Section */}
-            <View className="flex-row justify-center mt-10">
-              <Text className="text-white/70 text-base">Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)}>
-                <Text className="text-white font-bold text-base underline decoration-indigo-400">
-                  Login
-                </Text>
-              </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+
+          {/* Footer Section */}
+          <View className="flex-row justify-center mt-12">
+            <Text className="text-gray-400 text-[15px]">
+              Already have an account?{" "}
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/login" as any)}
+            >
+              <Text className="text-[#FFB347] font-bold text-[15px]">
+                Sign In
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

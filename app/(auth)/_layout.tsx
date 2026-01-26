@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 import SafeScreen from "../component/SafeScreen";
 
 export default function AuthLayout() {
@@ -11,10 +11,7 @@ export default function AuthLayout() {
     return <Redirect href={"/"} />;
   }
   return (
-    <LinearGradient
-      colors={["#4f46e5", "#312e81", "#1e1b4b"]}
-      className="flex-1"
-    >
+    <View className="flex-1 bg-[#FAFAFA]">
       <SafeScreen>
         <Stack
           screenOptions={{
@@ -36,7 +33,7 @@ export default function AuthLayout() {
           />
         </Stack>
       </SafeScreen>
-      <StatusBar style="light" />
-    </LinearGradient>
+      <StatusBar style="dark" />
+    </View>
   );
 }

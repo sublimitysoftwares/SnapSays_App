@@ -1,30 +1,61 @@
-import React, { useState } from 'react';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
-  View,
-  Text,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
+  Text,
   TouchableOpacity,
-  Image,
-} from 'react-native';
-import { useRouter } from 'expo-router';
+  View,
+} from "react-native";
+import * as z from "zod";
 
-import InputField from '../../components/InputField';
-import CustomButton from '../../components/CustomButton';
-import SocialButton from '../../components/SocialButton';
+import CustomButton from "../../components/CustomButton";
+import InputField from "../../components/InputField";
+import SocialButton from "../../components/SocialButton";
 
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from "../../context/AuthContext";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
   const { setIsSignedIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleLogin = () => {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    reset();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, [reset]);
+
+  const onLogin = (data: LoginFormData) => {
     setLoading(true);
+    console.log("Login data:", data);
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
@@ -34,93 +65,111 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ flexGrow: 1 }}
-          >
-            <View className="flex-1 px-6 justify-center py-10">
-              {/* Header Section */}
-              <View className="items-center mb-10">
-                <View className="w-24 h-24 mb-4">
-                  <Image 
-                    source={require('../../assets/images/logoMain.png')} 
-                    className="w-full h-full"
-                    resizeMode="contain"
-                  />
-                </View>
-                <Text className="text-white text-4xl font-black tracking-tight">
-                  SnapSays
-                </Text>
-                <Text className="text-indigo-200 text-lg">
-                  Welcome back to the future
-                </Text>
-              </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1 bg-[#FAFAFA]"
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FFB347"]}
+            tintColor="#FFB347"
+          />
+        }
+      >
+        <View className="px-8 pt-12 pb-10">
+          {/* Header Section */}
+          <View className="mb-10">
+            <Text className="text-[#1A1A1A] text-3xl font-bold mb-2">
+              Login Account
+            </Text>
+            <Text className="text-gray-400 text-base">
+              Hello, Welcome back to our account!
+            </Text>
+          </View>
 
-              {/* Form Section */}
-              <View className="bg-white/10 p-6 rounded-[40px] border border-white/20 backdrop-blur-xl">
-                <Text className="text-white text-2xl font-bold mb-6 text-center">
-                  Login Account
-                </Text>
-                
+          {/* Form Section */}
+          <View>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
                 <InputField
-                  label="Email Address"
-                  iconName="mail-outline"
+                  label="Email"
                   placeholder="name@example.com"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.email?.message}
                 />
+              )}
+            />
 
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
                 <InputField
                   label="Password"
-                  iconName="lock-closed-outline"
-                  placeholder="••••••••"
+                  placeholder="**********"
                   secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={errors.password?.message}
                 />
+              )}
+            />
 
-                <TouchableOpacity className="self-end mb-6">
-                  <Text className="text-indigo-300 font-medium">Forgot Password?</Text>
-                </TouchableOpacity>
+            <TouchableOpacity className="self-end mb-6">
+              <Text className="text-gray-400 font-medium">
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
 
-                <CustomButton
-                  title="Sign In"
-                  onPress={handleLogin}
-                  loading={loading}
-                />
+            <CustomButton
+              title="Sign In"
+              onPress={handleSubmit(onLogin)}
+              loading={loading}
+              variant="orange"
+            />
 
-                <View className="flex-row items-center my-8">
-                  <View className="flex-1 h-[1px] bg-white/20" />
-                  <Text className="mx-4 text-white/50 font-medium">Or continue with</Text>
-                  <View className="flex-1 h-[1px] bg-white/20" />
-                </View>
-
-                {/* Social Login Buttons */}
-                <View className="flex-row space-x-4 gap-4">
-                  <SocialButton type="google" onPress={() => {}} />
-                  {/* <SocialButton type="apple" onPress={() => {}} /> */}
-                </View>
-              </View>
-
-              {/* Footer Section */}
-              <View className="flex-row justify-center mt-10">
-                <Text className="text-white/70 text-base">Don't have an account? </Text>
-                <TouchableOpacity onPress={() => router.push('/(auth)/signup' as any)}>
-                  <Text className="text-white font-bold text-base underline decoration-indigo-400">
-                    Sign Up
-                  </Text>
-                </TouchableOpacity>
-              </View>
+            <View className="flex-row items-center my-8">
+              <View className="flex-1 h-[1px] bg-gray-200" />
+              <Text className="mx-4 text-gray-400 font-medium">
+                Or Sign In With
+              </Text>
+              <View className="flex-1 h-[1px] bg-gray-200" />
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-    </View>
+
+            {/* Social Login Buttons */}
+            <View className="flex-row gap-4">
+              <SocialButton type="facebook" onPress={() => {}} />
+              <SocialButton type="google" onPress={() => {}} />
+            </View>
+          </View>
+
+          {/* Footer Section */}
+          <View className="flex-row justify-center mt-12">
+            <Text className="text-gray-400 text-[15px]">
+              Don't have an account?{" "}
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/signup" as any)}
+            >
+              <Text className="text-[#FFB347] font-bold text-[15px]">
+                Sign Up
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

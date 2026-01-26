@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import PagerView from "react-native-pager-view";
 import { Chip, SegmentedButtons } from "react-native-paper";
+import BgRemove from "../../components/BgRemove";
 import ImageUpload from "../../components/ImageUpload";
 import { Colors } from "../../constants/Colors";
 import { useAuth } from "../../context/AuthContext";
@@ -300,27 +301,7 @@ export default function Index() {
             style={{ flex: 1 }}
             className="bg-gray-50/30 dark:bg-slate-950"
           >
-            <ScrollView
-              className="flex-1 px-6"
-              contentContainerStyle={{ paddingBottom: 160 }}
-            >
-              <View className="bg-white dark:bg-slate-900 p-12 rounded-[32px] border border-gray-100 dark:border-slate-800 items-center justify-center mt-12">
-                <View className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full items-center justify-center mb-6 border border-indigo-100 dark:border-indigo-800 shadow-sm">
-                  <Ionicons
-                    name="image-outline"
-                    size={40}
-                    color={isDark ? Colors.dark.tint : Colors.light.secondary}
-                  />
-                </View>
-                <Text className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                  Coming Soon
-                </Text>
-                <Text className="text-gray-400 dark:text-gray-500 text-center leading-5 px-4 font-medium">
-                  Professional-grade background removal powered by AI. Stay
-                  tuned!
-                </Text>
-              </View>
-            </ScrollView>
+            <BgRemove />
           </View>
         </PagerView>
       </View>

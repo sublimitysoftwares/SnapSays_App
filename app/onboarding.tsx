@@ -1,23 +1,23 @@
+import { useNotification } from "@/context/NotificationContext";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  Dimensions,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  Dimensions,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { PAGES } from "../constants/questions";
-import { useAuth } from "../context/AuthContext";
 import Animated, {
   FadeInRight,
   FadeOutLeft,
   Layout,
 } from "react-native-reanimated";
+import { PAGES } from "../constants/questions";
+import { useAuth } from "../context/AuthContext";
 import SafeScreen from "./component/SafeScreen";
-import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +26,7 @@ export default function OnboardingScreen() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const { setIsOnboarded } = useAuth();
   const router = useRouter();
+  const { showSuccess, showError, showInfo } = useNotification();
 
   const currentPage = PAGES[currentPageIndex];
 
@@ -42,6 +43,7 @@ export default function OnboardingScreen() {
 
     if (!allAnswered) {
       alert("Please answer all questions before moving to the next page.");
+      // showInfo("Please answer all questions before moving to the next page.");
       return;
     }
 
@@ -52,7 +54,6 @@ export default function OnboardingScreen() {
       console.log("Final Answers:", answers);
       setIsOnboarded(true);
       router.replace("/(tabs)");
-
     }
   };
 
@@ -112,10 +113,10 @@ export default function OnboardingScreen() {
                 Let's get to know you
               </Text>
 
-              {currentPage.questions.map((q) => (
+              {currentPage.questions.map((q, i) => (
                 <View key={q.id} className="mb-10">
                   <Text className="text-white text-xl font-bold mb-6">
-                    {q.question}
+                    {i + 1}. {q.question}
                   </Text>
 
                   <View className="space-y-4 gap-3">
@@ -163,7 +164,7 @@ export default function OnboardingScreen() {
               className="bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row"
             >
               <Text className="text-indigo-900 text-lg font-bold mr-2">
-                {currentPageIndex === PAGES.length - 1 ? "Finish" : "Continue"}
+                {currentPageIndex === PAGES.length - 1 ? "Finish" : "Next"}
               </Text>
               <Ionicons
                 name={

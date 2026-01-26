@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/clerk-expo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import { PaperProvider } from "react-native-paper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../context/AuthContext";
 import { NotificationProvider } from "../context/NotificationContext";
 import { ThemeProvider, useAppTheme } from "../context/ThemeContext";
@@ -41,22 +42,24 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <ThemeWrapper>
-        <NotificationProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <ClerkProvider
-                tokenCache={tokenCache}
-                publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-              >
-                {/* <AuthGuard /> */}
-                <InitialLayout />
-              </ClerkProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        </NotificationProvider>
-      </ThemeWrapper>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <ThemeWrapper>
+          <NotificationProvider>
+            <QueryClientProvider client={queryClient}>
+              <AuthProvider>
+                <ClerkProvider
+                  tokenCache={tokenCache}
+                  publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+                >
+                  {/* <AuthGuard /> */}
+                  <InitialLayout />
+                </ClerkProvider>
+              </AuthProvider>
+            </QueryClientProvider>
+          </NotificationProvider>
+        </ThemeWrapper>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
