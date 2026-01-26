@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useNotification } from "../context/NotificationContext";
 import {
   GenerateCaptionResponse,
   useGenerateCaption,
@@ -29,6 +30,7 @@ export default function ImageUpload({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   /* Removed local uploading state in favor of TanStack Query isPending */
   const [showOptions, setShowOptions] = useState(false);
+  const { showSuccess, showError } = useNotification();
 
   const requestPermission = useCallback(async (type: "camera" | "library") => {
     const permission =
@@ -93,13 +95,13 @@ export default function ImageUpload({
         {
           onSuccess: (data: GenerateCaptionResponse) => {
             onUploadSuccess?.(data.caption || data.imageUrl || "");
-            Alert.alert("Success", "Caption generated successfully");
+            showSuccess("Caption generated successfully!");
             setSelectedImage(null);
           },
           onError: (err: Error) => {
             const message = err.message || "Upload failed";
             onUploadError?.(message);
-            Alert.alert("Error", message);
+            showError(message);
           },
         },
       );
@@ -107,13 +109,13 @@ export default function ImageUpload({
     [selectedImage, generateCaption, onUploadSuccess, onUploadError],
   );
 
-  const shareToLinkedIn = (data: string) => {
+  const shareToLinkedIn = () => {
     const personalityKnowledge = "";
     const description = `You are a professional LinkedIn copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 LinkedIn posts aligned with their visual presence, professional personality profile, and emotional state. Each post must be ready to publish, vary in tone, and include relevant hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
     handleUpload(description);
   };
 
-  const shareToInstagram = (data: string) => {
+  const shareToInstagram = () => {
     const personalityKnowledge = "";
     const description = `You are a professional Instagram copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 Instagram captions aligned with their visual presence, personality profile, and emotional state. Each caption must be ready to post, vary in tone, and include suitable hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
     handleUpload(description);

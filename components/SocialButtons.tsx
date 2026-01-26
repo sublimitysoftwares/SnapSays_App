@@ -4,8 +4,8 @@ import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface SocialButtonsProps {
-  shareToLinkedIn: (data: string) => void;
-  shareToInstagram: (data: string) => void;
+  shareToLinkedIn: () => void;
+  shareToInstagram: () => void;
 }
 
 const SocialButtons: React.FC<SocialButtonsProps> = ({
@@ -14,10 +14,7 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
 }) => {
   return (
     <View className="flex-row justify-center mt-6 gap-4">
-      <TouchableOpacity
-        onPress={() => shareToLinkedIn("LinkedIn")}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity onPress={() => shareToLinkedIn()} activeOpacity={0.8}>
         <LinearGradient
           colors={["#0077b5", "#005885"]}
           start={{ x: 0, y: 0 }}
@@ -29,10 +26,7 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => shareToInstagram("Instagram")}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity onPress={() => shareToInstagram()} activeOpacity={0.8}>
         <LinearGradient
           colors={["#f09433", "#e6683c", "#dc2743", "#cc2366", "#bc1888"]}
           start={{ x: 0, y: 0 }}

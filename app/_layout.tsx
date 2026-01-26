@@ -1,7 +1,9 @@
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
+import { PaperProvider } from "react-native-paper";
 import { AuthProvider } from "../context/AuthContext";
+import { NotificationProvider } from "../context/NotificationContext";
 import InitialLayout from "./component/InitialLayout";
 
 const queryClient = new QueryClient();
@@ -33,16 +35,20 @@ const tokenCache = {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ClerkProvider
-          tokenCache={tokenCache}
-          publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-        >
-          {/* <AuthGuard /> */}
-          <InitialLayout />
-        </ClerkProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <PaperProvider>
+      <NotificationProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ClerkProvider
+              tokenCache={tokenCache}
+              publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+            >
+              {/* <AuthGuard /> */}
+              <InitialLayout />
+            </ClerkProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </NotificationProvider>
+    </PaperProvider>
   );
 }
