@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Linking,
@@ -12,27 +11,18 @@ import {
   View,
 } from "react-native";
 import { Colors } from "../constants/Colors";
-import { useNotification } from "../context/NotificationContext";
 import { useAppTheme } from "../context/ThemeContext";
-import {
-  GenerateCaptionResponse,
-  useGenerateCaption,
-} from "../hooks/useGenerateCaption";
-import SocialButtons from "./SocialButtons";
 
 interface ImageUploadProps {
-  onUploadSuccess?: (imageUrl: string) => void;
-  onUploadError?: (error: string) => void;
+  onImageSelected: (uri: string | null) => void;
+  selectedImage: string | null;
 }
 
 export default function ImageUpload({
-  onUploadSuccess,
-  onUploadError,
+  onImageSelected,
+  selectedImage,
 }: ImageUploadProps) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  /* Removed local uploading state in favor of TanStack Query isPending */
   const [showOptions, setShowOptions] = useState(false);
-  const { showSuccess, showError } = useNotification();
   const { isDark } = useAppTheme();
 
   const requestPermission = useCallback(async (type: "camera" | "library") => {
@@ -77,99 +67,47 @@ export default function ImageUpload({
             });
 
       if (!result.canceled && result.assets?.[0]?.uri) {
-        setSelectedImage(result.assets[0].uri);
+        onImageSelected(result.assets[0].uri);
       }
     },
-    [requestPermission],
+    [requestPermission, onImageSelected],
   );
-
-  const { mutate: generateCaption, isPending: uploading } =
-    useGenerateCaption();
-
-  const handleUpload = useCallback(
-    (description: string) => {
-      if (!selectedImage) {
-        Alert.alert("No Image", "Please select an image first.");
-        return;
-      }
-
-      generateCaption(
-        { selectedImage, description },
-        {
-          onSuccess: (data: GenerateCaptionResponse) => {
-            onUploadSuccess?.(data.caption || data.imageUrl || "");
-            showSuccess("Caption generated successfully!");
-            setSelectedImage(null);
-          },
-          onError: (err: Error) => {
-            const message = err.message || "Upload failed";
-            onUploadError?.(message);
-            showError(message);
-          },
-        },
-      );
-    },
-    [selectedImage, generateCaption, onUploadSuccess, onUploadError],
-  );
-
-  const shareToLinkedIn = () => {
-    const personalityKnowledge = "";
-    const description = `You are a professional LinkedIn copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 LinkedIn posts aligned with their visual presence, professional personality profile, and emotional state. Each post must be ready to publish, vary in tone, and include relevant hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
-    handleUpload(description);
-  };
-
-  const shareToInstagram = () => {
-    const personalityKnowledge = "";
-    const description = `You are a professional Instagram copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 Instagram captions aligned with their visual presence, personality profile, and emotional state. Each caption must be ready to post, vary in tone, and include suitable hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
-    handleUpload(description);
-  };
 
   return (
     <View className="w-full">
-      {selectedImage && (
-        <View className="mb-6 items-center">
-          <View className="relative">
+      {selectedImage ? (
+        <View className="items-center w-full">
+          <View className="relative w-full">
             <Image
               source={{ uri: selectedImage }}
-              className="w-64 h-64 rounded-3xl"
+              className="w-full h-80 rounded-3xl"
+              resizeMode="cover"
             />
             <TouchableOpacity
-              onPress={() => setSelectedImage(null)}
-              className="absolute top-2 right-2 bg-red-500 p-2 rounded-full"
+              onPress={() => onImageSelected(null)}
+              className="absolute top-3 right-3 bg-red-500 p-2 rounded-full shadow-lg"
             >
               <Ionicons name="close" size={20} color="white" />
             </TouchableOpacity>
           </View>
         </View>
-      )}
-
-      {selectedImage && !uploading && (
-        <SocialButtons
-          shareToLinkedIn={shareToLinkedIn}
-          shareToInstagram={shareToInstagram}
-        />
-      )}
-
-      {uploading && (
-        <View className="py-8 items-center justify-center">
-          <ActivityIndicator
-            size="large"
-            color={isDark ? Colors.dark.tint : Colors.light.tint}
-          />
-          <Text className="mt-4 text-indigo-600 dark:text-indigo-400 font-medium text-center">
-            Generating your social content...
-          </Text>
-        </View>
-      )}
-
-      {!selectedImage && !uploading && (
+      ) : (
         <TouchableOpacity
           onPress={() => setShowOptions(true)}
-          className="bg-indigo-600 py-4 rounded-2xl flex-row justify-center items-center"
+          className="bg-indigo-50 dark:bg-indigo-900/10 py-12 rounded-[32px] border-2 border-dashed border-indigo-200 dark:border-indigo-800 flex-column justify-center items-center"
         >
-          <Ionicons name="images-outline" size={24} color="white" />
-          <Text className="ml-2 text-white font-bold text-lg">
-            Select Image
+          <View className="bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-full mb-4">
+            <Ionicons
+              name="images-outline"
+              size={32}
+              color={isDark ? Colors.dark.tint : Colors.light.tint}
+            />
+          </View>
+          <Text className="text-indigo-600 dark:text-indigo-400 font-bold text-lg">
+            Select an Image
+          </Text>
+          <Text className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+            Pick from gallery or take a photo
           </Text>
         </TouchableOpacity>
       )}
@@ -186,37 +124,41 @@ export default function ImageUpload({
           className="flex-1 bg-black/60 justify-end"
         >
           <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6">
-            <Text className="text-xl font-bold text-center mb-6 dark:text-white">
+            <View className="w-12 h-1.5 bg-gray-200 dark:bg-slate-800 rounded-full self-center mb-6" />
+
+            <Text className="text-xl font-bold text-center mb-8 dark:text-white">
               Choose Image Source
             </Text>
 
-            <TouchableOpacity
-              onPress={() => selectImage("camera")}
-              className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl mb-3"
-            >
-              <Ionicons
-                name="camera"
-                size={24}
-                color={isDark ? Colors.dark.tint : Colors.light.tint}
-              />
-              <Text className="ml-4 text-lg font-bold dark:text-slate-200">
-                Camera
-              </Text>
-            </TouchableOpacity>
+            <View className="flex-row justify-around mb-4">
+              <TouchableOpacity
+                onPress={() => selectImage("camera")}
+                className="items-center"
+              >
+                <View className="bg-indigo-50 dark:bg-indigo-900/20 w-16 h-16 rounded-2xl items-center justify-center mb-2">
+                  <Ionicons
+                    name="camera"
+                    size={28}
+                    color={isDark ? Colors.dark.tint : Colors.light.tint}
+                  />
+                </View>
+                <Text className="font-bold dark:text-slate-300">Camera</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => selectImage("library")}
-              className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl"
-            >
-              <Ionicons
-                name="images"
-                size={24}
-                color={isDark ? Colors.dark.tint : Colors.light.tint}
-              />
-              <Text className="ml-4 text-lg font-bold dark:text-slate-200">
-                Gallery
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => selectImage("library")}
+                className="items-center"
+              >
+                <View className="bg-purple-50 dark:bg-purple-900/20 w-16 h-16 rounded-2xl items-center justify-center mb-2">
+                  <Ionicons
+                    name="images"
+                    size={28}
+                    color={isDark ? "#a78bfa" : "#9333ea"}
+                  />
+                </View>
+                <Text className="font-bold dark:text-slate-300">Gallery</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>

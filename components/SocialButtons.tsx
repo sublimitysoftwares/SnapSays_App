@@ -14,13 +14,17 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
   shareToInstagram,
 }) => {
   return (
-    <View className="flex-row justify-center mt-6 gap-4">
-      <TouchableOpacity onPress={() => shareToLinkedIn()} activeOpacity={0.8}>
+    <View className="flex-row justify-between mt-6 gap-4">
+      <TouchableOpacity
+        onPress={() => shareToLinkedIn()}
+        activeOpacity={0.8}
+        className="rounded-md overflow-hidden"
+      >
         <LinearGradient
           colors={["#0077b5", "#005885"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="flex-row items-center px-6 py-4 rounded-2xl shadow-lg border border-white/20"
+          className="flex-row items-center px-6 py-4 rounded-md shadow-lg border border-white/20"
         >
           <Ionicons
             name="logo-linkedin"
@@ -31,12 +35,16 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => shareToInstagram()} activeOpacity={0.8}>
+      <TouchableOpacity
+        onPress={() => shareToInstagram()}
+        activeOpacity={0.8}
+        className="rounded-md overflow-hidden"
+      >
         <LinearGradient
           colors={["#f09433", "#e6683c", "#dc2743", "#cc2366", "#bc1888"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="flex-row items-center px-6 py-4 rounded-2xl shadow-lg border border-white/20"
+          className="flex-row items-center px-6 py-4 rounded-md shadow-lg border border-white/20"
         >
           <Ionicons
             name="logo-instagram"

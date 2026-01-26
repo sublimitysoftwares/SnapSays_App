@@ -17,7 +17,11 @@ import { API_CONFIG } from "../constants/Config";
 import { useNotification } from "../context/NotificationContext";
 import { useAppTheme } from "../context/ThemeContext";
 
-export default function BgRemove() {
+interface BgRemoveProps {
+  onImageSelected?: () => void;
+}
+
+export default function BgRemove({ onImageSelected }: BgRemoveProps) {
   const [image, setImage] = useState<string | null>(null);
   const [bgDescription, setBgDescription] = useState("");
   const [isBgLoading, setIsBgLoading] = useState(false);
@@ -41,6 +45,8 @@ export default function BgRemove() {
     if (!result.canceled && result.assets?.[0]?.uri) {
       setImage(result.assets[0].uri);
       setGeneratedImage(null);
+      // Notify parent that an image was selected
+      onImageSelected?.();
     }
   };
 
