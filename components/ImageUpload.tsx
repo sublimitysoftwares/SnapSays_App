@@ -11,7 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Colors } from "../constants/Colors";
 import { useNotification } from "../context/NotificationContext";
+import { useAppTheme } from "../context/ThemeContext";
 import {
   GenerateCaptionResponse,
   useGenerateCaption,
@@ -31,6 +33,7 @@ export default function ImageUpload({
   /* Removed local uploading state in favor of TanStack Query isPending */
   const [showOptions, setShowOptions] = useState(false);
   const { showSuccess, showError } = useNotification();
+  const { isDark } = useAppTheme();
 
   const requestPermission = useCallback(async (type: "camera" | "library") => {
     const permission =
@@ -149,8 +152,11 @@ export default function ImageUpload({
 
       {uploading && (
         <View className="py-8 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
-          <Text className="mt-4 text-indigo-600 font-medium text-center">
+          <ActivityIndicator
+            size="large"
+            color={isDark ? Colors.dark.tint : Colors.light.tint}
+          />
+          <Text className="mt-4 text-indigo-600 dark:text-indigo-400 font-medium text-center">
             Generating your social content...
           </Text>
         </View>
@@ -177,27 +183,39 @@ export default function ImageUpload({
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setShowOptions(false)}
-          className="flex-1 bg-black/50 justify-end"
+          className="flex-1 bg-black/60 justify-end"
         >
-          <View className="bg-white rounded-t-3xl p-6">
-            <Text className="text-xl font-bold text-center mb-6">
+          <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6">
+            <Text className="text-xl font-bold text-center mb-6 dark:text-white">
               Choose Image Source
             </Text>
 
             <TouchableOpacity
               onPress={() => selectImage("camera")}
-              className="flex-row items-center bg-indigo-50 p-4 rounded-2xl mb-3"
+              className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl mb-3"
             >
-              <Ionicons name="camera" size={24} color="#4f46e5" />
-              <Text className="ml-4 text-lg font-bold">Camera</Text>
+              <Ionicons
+                name="camera"
+                size={24}
+                color={isDark ? Colors.dark.tint : Colors.light.tint}
+              />
+              <Text className="ml-4 text-lg font-bold dark:text-slate-200">
+                Camera
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => selectImage("library")}
-              className="flex-row items-center bg-indigo-50 p-4 rounded-2xl"
+              className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl"
             >
-              <Ionicons name="images" size={24} color="#4f46e5" />
-              <Text className="ml-4 text-lg font-bold">Gallery</Text>
+              <Ionicons
+                name="images"
+                size={24}
+                color={isDark ? Colors.dark.tint : Colors.light.tint}
+              />
+              <Text className="ml-4 text-lg font-bold dark:text-slate-200">
+                Gallery
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

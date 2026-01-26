@@ -12,7 +12,9 @@ import {
 import PagerView from "react-native-pager-view";
 import { Chip, SegmentedButtons } from "react-native-paper";
 import ImageUpload from "../../components/ImageUpload";
+import { Colors } from "../../constants/Colors";
 import { useAuth } from "../../context/AuthContext";
+import { useAppTheme } from "../../context/ThemeContext";
 import "../global.css";
 
 export default function Index() {
@@ -30,6 +32,7 @@ export default function Index() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"caption" | "bgRemove">("caption");
   const pagerRef = useRef<PagerView>(null);
+  const { isDark } = useAppTheme();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -98,18 +101,18 @@ export default function Index() {
   };
 
   return (
-    <View style={{ flex: 1 }} className="bg-white">
+    <View style={{ flex: 1 }} className="bg-white dark:bg-slate-950">
       {/* 1. Sticky Header Section (Non-Scrollable) */}
-      <View className="bg-white px-6 pt-14 pb-4 border-b border-gray-50 flex-row justify-between items-center">
+      <View className="bg-white dark:bg-slate-950 px-6 pt-14 pb-4 border-b border-gray-50 dark:border-slate-900 flex-row justify-between items-center">
         <View>
-          <Text className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-1">
+          <Text className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-1">
             Welcome back,
           </Text>
-          <Text className="text-xl font-black text-gray-800">
+          <Text className="text-xl font-black text-gray-800 dark:text-white">
             {user?.firstName || "Explorer"} 👋
           </Text>
         </View>
-        <TouchableOpacity className="p-1 bg-indigo-50 rounded-full border border-indigo-100">
+        <TouchableOpacity className="p-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800">
           <Image
             source={{ uri: user?.imageUrl }}
             className="w-10 h-10 rounded-full"
@@ -118,7 +121,7 @@ export default function Index() {
       </View>
 
       {/* 2. Tabs Section (Sticky below Header) */}
-      <View className="px-6 py-4 bg-white shadow-sm z-10">
+      <View className="px-6 py-4 bg-white dark:bg-slate-950 shadow-sm z-10">
         <SegmentedButtons
           value={activeTab}
           onValueChange={(value) => {
@@ -129,9 +132,9 @@ export default function Index() {
           density="medium"
           theme={{
             colors: {
-              secondaryContainer: "#4f46e5", // bg-indigo-600
-              onSecondaryContainer: "white",
-              outline: "#f1f5f9",
+              secondaryContainer: isDark ? Colors.dark.tint : Colors.light.tint,
+              onSecondaryContainer: Colors.palette.white,
+              outline: isDark ? Colors.dark.outline : Colors.light.outline,
             },
           }}
           buttons={[
@@ -163,7 +166,11 @@ export default function Index() {
           }}
         >
           {/* Caption Tab Slidable Content */}
-          <View key="1" style={{ flex: 1, backgroundColor: "#f9fafb" }}>
+          <View
+            key="1"
+            style={{ flex: 1 }}
+            className="bg-gray-50/30 dark:bg-slate-950"
+          >
             <ScrollView
               className="flex-1 px-6"
               showsVerticalScrollIndicator={false}
@@ -178,7 +185,7 @@ export default function Index() {
               }
             >
               {/* Promo Banner moved inside ScrollView for better scroll flow */}
-              <View className="bg-indigo-600 rounded-2xl p-4 flex-row items-center overflow-hidden relative my-6 shadow-md shadow-indigo-100">
+              <View className="bg-indigo-600 dark:bg-indigo-700 rounded-2xl p-4 flex-row items-center overflow-hidden relative my-6 shadow-md shadow-indigo-100 dark:shadow-none">
                 <View className="flex-1 z-10">
                   <Text className="text-white text-lg font-bold mb-1">
                     Snap, Say, Share
@@ -188,12 +195,16 @@ export default function Index() {
                   </Text>
                 </View>
                 <View className="absolute -right-2 -bottom-2 opacity-20">
-                  <Ionicons name="sparkles" size={80} color="white" />
+                  <Ionicons
+                    name="sparkles"
+                    size={80}
+                    color={isDark ? Colors.dark.tint : Colors.palette.white}
+                  />
                 </View>
               </View>
 
               {/* Upload Area */}
-              <View className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 mb-6">
+              <View className="bg-white dark:bg-slate-900 p-6 rounded-[32px] shadow-sm border border-gray-100 dark:border-slate-800 mb-6">
                 <ImageUpload
                   onUploadSuccess={handleUploadSuccess}
                   onUploadError={handleUploadError}
@@ -205,26 +216,32 @@ export default function Index() {
                 caption.map((item: any, index: number) => (
                   <View
                     key={index}
-                    className="mb-8 bg-white rounded-[32px] p-6 shadow-sm border border-gray-50"
+                    className="mb-8 bg-white dark:bg-slate-900 rounded-[32px] p-6 shadow-sm border border-gray-50 dark:border-slate-800"
                   >
                     <View className="flex-row items-center justify-between mb-5">
                       <View className="flex-row items-center">
-                        <View className="w-9 h-9 bg-indigo-50 rounded-xl items-center justify-center mr-3 border border-indigo-100">
-                          <Ionicons name="sparkles" size={18} color="#6366f1" />
+                        <View className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl items-center justify-center mr-3 border border-indigo-100 dark:border-indigo-800">
+                          <Ionicons
+                            name="sparkles"
+                            size={18}
+                            color={
+                              isDark ? Colors.dark.tint : Colors.light.secondary
+                            }
+                          />
                         </View>
-                        <Text className="text-lg font-black text-gray-800">
+                        <Text className="text-lg font-black text-gray-800 dark:text-white">
                           Magic Caption
                         </Text>
                       </View>
-                      <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-700 text-[9px] font-black uppercase">
+                      <View className="bg-green-100 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-200 dark:border-green-800">
+                        <Text className="text-green-700 dark:text-green-400 text-[9px] font-black uppercase">
                           Success
                         </Text>
                       </View>
                     </View>
 
-                    <View className="bg-gray-50/50 rounded-2xl p-5 border border-gray-100 mb-4">
-                      <Text className="text-gray-800 text-md leading-6 font-semibold italic">
+                    <View className="bg-gray-50/50 dark:bg-slate-800/50 rounded-2xl p-5 border border-gray-100 dark:border-slate-700/50 mb-4">
+                      <Text className="text-gray-800 dark:text-slate-200 text-md leading-6 font-semibold italic">
                         "{item.caption}"
                       </Text>
 
@@ -234,8 +251,21 @@ export default function Index() {
                             <Chip
                               key={idx}
                               mode="flat"
-                              selectedColor="#6366f1"
-                              style={{ backgroundColor: "white", height: 30 }}
+                              selectedColor={
+                                isDark
+                                  ? Colors.dark.tint
+                                  : Colors.light.secondary
+                              }
+                              style={{
+                                backgroundColor: isDark
+                                  ? Colors.dark.surface
+                                  : Colors.palette.white,
+                                borderWidth: 1,
+                                borderColor: isDark
+                                  ? Colors.dark.outline
+                                  : Colors.palette.indigo[50],
+                                height: 30,
+                              }}
                               textStyle={{ fontWeight: "700", fontSize: 11 }}
                             >
                               #{tag.toLowerCase()}
@@ -247,8 +277,12 @@ export default function Index() {
 
                     <View className="flex-row justify-between items-center px-1">
                       <View className="flex-row items-center">
-                        <Ionicons name="heart" size={16} color="#f43f5e" />
-                        <Text className="ml-1.5 text-gray-400 font-bold text-[10px]">
+                        <Ionicons
+                          name="heart"
+                          size={16}
+                          color={Colors.palette.error}
+                        />
+                        <Text className="ml-1.5 text-gray-400 dark:text-gray-500 font-bold text-[10px]">
                           AI Generated
                         </Text>
                       </View>
@@ -261,19 +295,27 @@ export default function Index() {
           </View>
 
           {/* Remove BG Tab Slidable Content */}
-          <View key="2" style={{ flex: 1, backgroundColor: "#f9fafb" }}>
+          <View
+            key="2"
+            style={{ flex: 1 }}
+            className="bg-gray-50/30 dark:bg-slate-950"
+          >
             <ScrollView
               className="flex-1 px-6"
               contentContainerStyle={{ paddingBottom: 160 }}
             >
-              <View className="bg-white p-12 rounded-[32px] border border-gray-100 items-center justify-center mt-12">
-                <View className="w-20 h-20 bg-indigo-50 rounded-full items-center justify-center mb-6 border border-indigo-100 shadow-sm">
-                  <Ionicons name="image-outline" size={40} color="#6366f1" />
+              <View className="bg-white dark:bg-slate-900 p-12 rounded-[32px] border border-gray-100 dark:border-slate-800 items-center justify-center mt-12">
+                <View className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full items-center justify-center mb-6 border border-indigo-100 dark:border-indigo-800 shadow-sm">
+                  <Ionicons
+                    name="image-outline"
+                    size={40}
+                    color={isDark ? Colors.dark.tint : Colors.light.secondary}
+                  />
                 </View>
-                <Text className="text-xl font-bold text-gray-800 mb-2">
+                <Text className="text-xl font-bold text-gray-800 dark:text-white mb-2">
                   Coming Soon
                 </Text>
-                <Text className="text-gray-400 text-center leading-5 px-4 font-medium">
+                <Text className="text-gray-400 dark:text-gray-500 text-center leading-5 px-4 font-medium">
                   Professional-grade background removal powered by AI. Stay
                   tuned!
                 </Text>

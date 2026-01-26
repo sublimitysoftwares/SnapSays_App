@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { Colors } from "../constants/Colors";
 
 interface SocialButtonsProps {
   shareToLinkedIn: () => void;
@@ -21,7 +22,11 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
           end={{ x: 1, y: 1 }}
           className="flex-row items-center px-6 py-4 rounded-2xl shadow-lg border border-white/20"
         >
-          <Ionicons name="logo-linkedin" size={20} color="white" />
+          <Ionicons
+            name="logo-linkedin"
+            size={20}
+            color={Colors.palette.white}
+          />
           <Text className="text-white font-bold ml-2">LinkedIn</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -33,7 +38,11 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
           end={{ x: 1, y: 1 }}
           className="flex-row items-center px-6 py-4 rounded-2xl shadow-lg border border-white/20"
         >
-          <Ionicons name="logo-instagram" size={20} color="white" />
+          <Ionicons
+            name="logo-instagram"
+            size={20}
+            color={Colors.palette.white}
+          />
           <Text className="text-white font-bold ml-2">Instagram</Text>
         </LinearGradient>
       </TouchableOpacity>

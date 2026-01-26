@@ -4,6 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import { PaperProvider } from "react-native-paper";
 import { AuthProvider } from "../context/AuthContext";
 import { NotificationProvider } from "../context/NotificationContext";
+import { ThemeProvider, useAppTheme } from "../context/ThemeContext";
 import InitialLayout from "./component/InitialLayout";
 
 const queryClient = new QueryClient();
@@ -33,22 +34,29 @@ const tokenCache = {
   },
 };
 
+function ThemeWrapper({ children }: { children: React.ReactNode }) {
+  const { theme } = useAppTheme();
+  return <PaperProvider theme={theme}>{children}</PaperProvider>;
+}
+
 export default function RootLayout() {
   return (
-    <PaperProvider>
-      <NotificationProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <ClerkProvider
-              tokenCache={tokenCache}
-              publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-            >
-              {/* <AuthGuard /> */}
-              <InitialLayout />
-            </ClerkProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </NotificationProvider>
-    </PaperProvider>
+    <ThemeProvider>
+      <ThemeWrapper>
+        <NotificationProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <ClerkProvider
+                tokenCache={tokenCache}
+                publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+              >
+                {/* <AuthGuard /> */}
+                <InitialLayout />
+              </ClerkProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </NotificationProvider>
+      </ThemeWrapper>
+    </ThemeProvider>
   );
 }

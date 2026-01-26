@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
+import { Text } from "react-native";
 import { Snackbar } from "react-native-paper";
+import { Colors } from "../constants/Colors";
 
 type NotificationType = "success" | "error" | "info";
 
@@ -51,13 +53,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const getBackgroundColor = () => {
     switch (type) {
       case "success":
-        return "#10b981";
+        return Colors.light.success;
       case "error":
-        return "#ef4444";
+        return Colors.light.error;
       case "info":
-        return "#6366f1";
+        return Colors.light.secondary;
       default:
-        return "#313131";
+        return Colors.palette.black;
     }
   };
 
@@ -70,14 +72,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         duration={3000}
         style={{
           backgroundColor: getBackgroundColor(),
-          marginBottom: 20,
+          top: 60,
+          position: "absolute",
+          left: 0,
+          right: 0,
+        }}
+        wrapperStyle={{
+          top: 0,
         }}
         action={{
           label: "Close",
+          labelStyle: { color: "white" },
           onPress: () => setVisible(false),
         }}
       >
-        {message}
+        <Text style={{ color: "white", fontWeight: "600" }}>{message}</Text>
       </Snackbar>
     </NotificationContext.Provider>
   );
