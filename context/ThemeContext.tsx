@@ -1,10 +1,10 @@
 import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 import { useColorScheme } from "react-native";
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
@@ -76,8 +76,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [isDark]);
 
   const toggleTheme = useCallback(() => {
-    setThemeModeState((prev) => (prev === "light" ? "dark" : "light"));
-  }, []);
+    setThemeModeState(isDark ? "light" : "dark");
+  }, [isDark]);
 
   const setThemeMode = useCallback((mode: ThemeMode) => {
     setThemeModeState(mode);

@@ -9,6 +9,7 @@ import {
   Image,
   RefreshControl,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   View,
@@ -92,12 +93,23 @@ export default function Index() {
   };
 
   const handleCopy = async (text: string, hashtags: string[]) => {
-    const fullText = `${text}\n\n${hashtags.map((tag) => `#${tag}`).join(" ")}`;
+    const fullText = `${text}\n\n${hashtags.map((tag) => `#${tag.toLowerCase()}`).join(" ")}`;
     await ExpoClipboard.setStringAsync(fullText);
     await ExpoHaptics.notificationAsync(
       ExpoHaptics.NotificationFeedbackType.Success,
     );
     showSuccess("Copied to clipboard!");
+  };
+
+  const handleShare = async (text: string, hashtags: string[]) => {
+    const fullText = `${text}\n\n${hashtags.map((tag) => `#${tag.toLowerCase()}`).join(" ")}`;
+    try {
+      await Share.share({
+        message: fullText,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
   };
 
   const handleUpload = (description: string) => {
@@ -289,19 +301,35 @@ export default function Index() {
                   </Text>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => handleCopy(item.caption, item.hashtags)}
-                  className="flex-row items-center bg-gray-50 dark:bg-slate-800 px-3 py-2 rounded-xl border border-gray-100 dark:border-slate-700"
-                >
-                  <Ionicons
-                    name="copy-outline"
-                    size={14}
-                    color={isDark ? "#94a3b8" : "#64748b"}
-                  />
-                  <Text className="ml-1.5 text-gray-500 dark:text-slate-400 font-bold text-[10px]">
-                    Copy
-                  </Text>
-                </TouchableOpacity>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity
+                    onPress={() => handleShare(item.caption, item.hashtags)}
+                    className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/30 px-3 py-2 rounded-xl border border-indigo-100 dark:border-indigo-800"
+                  >
+                    <Ionicons
+                      name="share-social-outline"
+                      size={14}
+                      color={isDark ? Colors.dark.tint : Colors.light.primary}
+                    />
+                    <Text className="ml-1.5 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+                      Share
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleCopy(item.caption, item.hashtags)}
+                    className="flex-row items-center bg-gray-50 dark:bg-slate-800 px-3 py-2 rounded-xl border border-gray-100 dark:border-slate-700"
+                  >
+                    <Ionicons
+                      name="copy-outline"
+                      size={14}
+                      color={isDark ? "#94a3b8" : "#64748b"}
+                    />
+                    <Text className="ml-1.5 text-gray-500 dark:text-slate-400 font-bold text-[10px]">
+                      Copy
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           ))}
