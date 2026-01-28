@@ -34,8 +34,8 @@ export const useGenerateCaption = () => {
 
       try {
         const response = await axios.post(
-          process.env.EXPO_PUBLIC_API_URL ||
-            "http://192.168.43.133:5000/api/generate-caption",
+          // process.env.EXPO_PUBLIC_API_URL ||
+          "http://192.168.0.23:5000/api/generate-caption",
           formData,
           {
             headers: {

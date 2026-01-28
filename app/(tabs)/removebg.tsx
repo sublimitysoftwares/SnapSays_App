@@ -2,11 +2,15 @@ import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import * as FileSystem from "expo-file-system/legacy";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import * as MediaLibrary from "expo-media-library";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -45,6 +49,35 @@ export default function RemoveBgScreen() {
     }, 1000);
   }, []);
 
+  const resizeAndCompressImage = async (uri: string) => {
+    const { width, height } = await new Promise<{
+      width: number;
+      height: number;
+    }>((resolve, reject) => {
+      Image.getSize(uri, (w, h) => resolve({ width: w, height: h }), reject);
+    });
+
+    let newWidth = width;
+    let newHeight = height;
+
+    if (width > 2048 || height > 2048) {
+      const scale = Math.min(2048 / width, 2048 / height);
+      newWidth = Math.floor(width * scale);
+      newHeight = Math.floor(height * scale);
+    }
+
+    const result = await manipulateAsync(
+      uri,
+      [{ resize: { width: newWidth, height: newHeight } }],
+      {
+        compress: 0.7,
+        format: SaveFormat.JPEG, // ✅ now defined
+      },
+    );
+
+    return result.uri;
+  };
+
   const addWatermark = async (imageUrl: string) => {
     return imageUrl;
   };
@@ -59,12 +92,37 @@ export default function RemoveBgScreen() {
       return;
     }
 
+    const processedImage = await resizeAndCompressImage(selectedImage);
+
+    try {
+      const dimensions = await new Promise<{ width: number; height: number }>(
+        (resolve, reject) => {
+          Image.getSize(
+            processedImage,
+            (width, height) => resolve({ width, height }),
+            (error) => reject(error),
+          );
+        },
+      );
+
+      if (dimensions.width > 2048 || dimensions.height > 2048) {
+        Alert.alert(
+          "Image Too Large",
+          "The selected image exceeds 2048px. Please select a smaller image.",
+        );
+        return;
+      }
+    } catch (error) {
+      console.log("Error checking image size:", error);
+      // Optional: Proceed or return. Proceeding might result in API error.
+    }
+
     setIsBgLoading(true);
     setGeneratedImage(null);
 
     const formData = new FormData();
     formData.append("image_file", {
-      uri: selectedImage,
+      uri: processedImage,
       name: "image.jpg",
       type: "image/jpeg",
     } as any);
@@ -100,20 +158,54 @@ export default function RemoveBgScreen() {
       setGeneratedImage(watermarkedImage);
       showSuccess("Background replaced successfully! ✨");
     } catch (error: any) {
-      console.error("Axios Error:", error.message);
-      if (error.response) {
-        console.error("Error Status:", error.response.status);
-      }
+      console.error("Axios Error Details:", {
+        message: error.message,
+        code: error.code,
+        config: error.config,
+        response: error.response
+          ? {
+              status: error.response.status,
+              data: error.response.data,
+              headers: error.response.headers,
+            }
+          : "No response",
+      });
       showError(`Error: ${error.message}`);
     } finally {
       setIsBgLoading(false);
     }
   };
 
+  const handleDownload = async () => {
+    if (!generatedImage) return;
+
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Please grant gallery permissions to save the image.",
+        );
+        return;
+      }
+
+      await MediaLibrary.saveToLibraryAsync(generatedImage);
+      showSuccess("Image saved to gallery! 📸");
+    } catch (error) {
+      console.error("Save Error:", error);
+      showError("Failed to save image");
+    }
+  };
+
   if (!isLoaded) return null;
 
   return (
-    <View style={{ flex: 1 }} className="bg-white dark:bg-slate-950">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      style={{ flex: 1 }}
+      className="bg-white dark:bg-slate-950"
+    >
       <View className="bg-white dark:bg-slate-950 px-6 pt-14 pb-4 border-b border-gray-50 dark:border-slate-900 flex-row justify-between items-center">
         <View>
           <Text className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-1">
@@ -227,7 +319,7 @@ export default function RemoveBgScreen() {
               resizeMode="cover"
             />
             <TouchableOpacity
-              onPress={() => Alert.alert("Download", "Feature coming soon!")}
+              onPress={handleDownload}
               className="bg-green-600 py-4 rounded-xl flex-row justify-center items-center shadow-md"
             >
               <Ionicons name="download-outline" size={20} color="white" />
@@ -238,6 +330,6 @@ export default function RemoveBgScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

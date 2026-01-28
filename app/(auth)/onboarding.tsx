@@ -15,9 +15,9 @@ import Animated, {
   FadeOutLeft,
   Layout,
 } from "react-native-reanimated";
-import { PAGES } from "../constants/questions";
-import { useAuth } from "../context/AuthContext";
-import SafeScreen from "./component/SafeScreen";
+import { PAGES } from "../../constants/questions";
+import { useAuth } from "../../context/AuthContext";
+import SafeScreen from "../component/SafeScreen";
 
 const { width } = Dimensions.get("window");
 

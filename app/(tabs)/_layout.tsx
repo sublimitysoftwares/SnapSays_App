@@ -1,18 +1,18 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
-import { Redirect, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import React from "react";
 
 export default function TabLayout() {
   const { isSignedIn, isLoaded } = useAuth();
 
   // Wait for auth to load
-  if (!isLoaded) return null;
+  // if (!isLoaded) return null;
 
-  // If not signed in, force them to login
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)/login" />;
-  }
+  // // If not signed in, force them to login
+  // if (!isSignedIn) {
+  //   return <Redirect href="/(auth)/login" />;
+  // }
 
   return (
     <Tabs

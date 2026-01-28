@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useState } from "react";
 import {
@@ -58,16 +59,39 @@ export default function ImageUpload({
           ? await ImagePicker.launchCameraAsync({
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
-              quality: 1,
+              quality: 0.5,
             })
           : await ImagePicker.launchImageLibraryAsync({
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
-              quality: 1,
+              quality: 0.5,
             });
 
       if (!result.canceled && result.assets?.[0]?.uri) {
-        onImageSelected(result.assets[0].uri);
+        const asset = result.assets[0];
+        let finalUri = asset.uri;
+
+        if (asset.width > 2048 || asset.height > 2048) {
+          try {
+            const manipResult = await manipulateAsync(
+              asset.uri,
+              [
+                {
+                  resize:
+                    asset.width > asset.height
+                      ? { width: 2048 }
+                      : { height: 2048 },
+                },
+              ],
+              { compress: 0.8, format: SaveFormat.JPEG },
+            );
+            finalUri = manipResult.uri;
+          } catch (error) {
+            console.error("Resize error:", error);
+            // Fallback or alert? Proceeding with original might limit API
+          }
+        }
+        onImageSelected(finalUri);
       }
     },
     [requestPermission, onImageSelected],
