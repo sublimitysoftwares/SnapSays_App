@@ -85,7 +85,7 @@ export default function OnboardingScreen() {
 
   return (
     <LinearGradient
-      colors={["#4f46e5", "#312e81", "#1e1b4b"]}
+      colors={['#FF5ACD', '#BB65FF', '#4BB1FF']}
       className="flex-1"
     >
       <SafeScreen>

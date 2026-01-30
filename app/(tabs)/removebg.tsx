@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import * as FileSystem from "expo-file-system/legacy";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { LinearGradient } from 'expo-linear-gradient';
 import * as MediaLibrary from "expo-media-library";
 import React, { useCallback, useState } from "react";
 import {
@@ -200,28 +201,33 @@ export default function RemoveBgScreen() {
   if (!isLoaded) return null;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-      style={{ flex: 1 }}
-      className="bg-white dark:bg-slate-950"
+    <LinearGradient
+      colors={['#FF5ACD', '#BB65FF', '#4BB1FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      className="flex-1"
     >
-      <View className="bg-white dark:bg-slate-950 px-6 pt-14 pb-4 border-b border-gray-50 dark:border-slate-900 flex-row justify-between items-center">
-        <View>
-          <Text className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-1">
-            Welcome back,
-          </Text>
-          <Text className="text-xl font-black text-gray-800 dark:text-white">
-            {user?.firstName || "Explorer"} 👋
-          </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        style={{ flex: 1 }}
+      >
+        <View className="bg-white/10 backdrop-blur-xl px-6 pt-14 pb-4 border-b border-white/20 flex-row justify-between items-center">
+          <View>
+            <Text className="text-white/60 font-bold text-[10px] uppercase tracking-widest mb-1">
+              Welcome back,
+            </Text>
+            <Text className="text-xl font-black text-white">
+              {user?.firstName || "Explorer"} ✨
+            </Text>
+          </View>
+          <TouchableOpacity className="p-1 bg-white/20 backdrop-blur-xl rounded-full border border-white/30">
+            <Image
+              source={{ uri: user?.imageUrl }}
+              className="w-10 h-10 rounded-full"
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity className="p-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800">
-          <Image
-            source={{ uri: user?.imageUrl }}
-            className="w-10 h-10 rounded-full"
-          />
-        </TouchableOpacity>
-      </View>
 
       <ScrollView
         className="flex-1 px-6 bg-gray-50/30 dark:bg-slate-950"
@@ -331,5 +337,6 @@ export default function RemoveBgScreen() {
         )}
       </ScrollView>
     </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }

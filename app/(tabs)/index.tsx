@@ -1,6 +1,7 @@
 import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as ExpoClipboard from "expo-clipboard";
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ExpoHaptics from "expo-haptics";
 import React, { useCallback, useState } from "react";
 import {
@@ -149,17 +150,22 @@ export default function Index() {
   if (!isLoaded) return null;
 
   return (
-    <View style={{ flex: 1 }} className="bg-white dark:bg-slate-950">
-      <View className="bg-white dark:bg-slate-950 px-6 pt-14 pb-4 border-b border-gray-50 dark:border-slate-900 flex-row justify-between items-center">
+    <LinearGradient
+      colors={['#FF5ACD', '#BB65FF', '#4BB1FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <View className="bg-white/10 backdrop-blur-xl px-6 pt-14 pb-4 border-b border-white/20 flex-row justify-between items-center">
         <View>
-          <Text className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-1">
+          <Text className="text-white/60 font-bold text-[10px] uppercase tracking-widest mb-1">
             Welcome back,
           </Text>
-          <Text className="text-xl font-black text-gray-800 dark:text-white">
-            {user?.firstName || "Explorer"} 👋
+          <Text className="text-xl font-black text-white">
+            {user?.firstName || "Explorer"} ✨
           </Text>
         </View>
-        <TouchableOpacity className="p-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800">
+        <TouchableOpacity className="p-1 bg-white/20 backdrop-blur-xl rounded-full border border-white/30">
           <Image
             source={{ uri: user?.imageUrl }}
             className="w-10 h-10 rounded-full"
@@ -168,32 +174,32 @@ export default function Index() {
       </View>
 
       <ScrollView
-        className="flex-1 px-6 bg-gray-50/30 dark:bg-slate-950"
+        className="flex-1 px-6"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#4f46e5"]}
-            tintColor="#4f46e5"
+            colors={["#ffffff"]}
+            tintColor="#ffffff"
           />
         }
       >
-        <View className="bg-indigo-600 dark:bg-indigo-700 rounded-2xl p-4 flex-row items-center overflow-hidden relative my-6 shadow-md shadow-indigo-100 dark:shadow-none">
+        <View className="bg-white/15 backdrop-blur-2xl rounded-2xl p-4 flex-row items-center overflow-hidden relative my-6 border border-white/20 shadow-xl">
           <View className="flex-1 z-10">
             <Text className="text-white text-lg font-bold mb-1">
               Snap, Say, Share
             </Text>
-            <Text className="text-indigo-100 text-[11px] font-medium leading-4">
+            <Text className="text-white/80 text-[11px] font-medium leading-4">
               AI-powered captions for your best social media moments.
             </Text>
           </View>
-          <View className="absolute -right-2 -bottom-2 opacity-20">
+          <View className="absolute -right-2 -bottom-2 opacity-10">
             <Ionicons
               name="sparkles"
               size={80}
-              color={isDark ? Colors.dark.tint : Colors.palette.white}
+              color="#ffffff"
             />
           </View>
         </View>
@@ -334,6 +340,6 @@ export default function Index() {
             </View>
           ))}
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }

@@ -13,13 +13,17 @@ interface InputFieldProps extends TextInputProps {
   iconName?: keyof typeof Ionicons.glyphMap;
   error?: string;
   showIcon?: boolean;
+  showLabel?: boolean;
+  glassmorphic?: boolean;
 }
 
 export default function InputField({
   label,
   iconName,
   error,
-  showIcon = false,
+  showIcon = true,
+  showLabel = true,
+  glassmorphic = false,
   secureTextEntry,
   ...props
 }: InputFieldProps) {
@@ -27,25 +31,29 @@ export default function InputField({
 
   return (
     <View className="mb-4">
-      <Text className="text-gray-400 font-medium mb-1.5 text-base ml-1">
-        {label}
-      </Text>
+      {showLabel && (
+        <Text className={`font-medium mb-1.5 text-base ml-1 ${glassmorphic ? 'text-white/80' : 'text-gray-400'}`}>
+          {label}
+        </Text>
+      )}
       <View
-        className={`flex-row items-center bg-white rounded-full px-5 py-3.5 border ${
-          error ? "border-red-500" : "border-gray-100"
-        } shadow-sm`}
+        className={`flex-row items-center rounded-full px-5 py-3.5 border ${
+          glassmorphic 
+            ? 'bg-white/20 border-white/30 backdrop-blur-xl' 
+            : `bg-white ${error ? "border-red-500" : "border-gray-100"} shadow-sm`
+        }`}
       >
         {iconName && showIcon && (
           <Ionicons
             name={iconName}
             size={20}
-            color="#9ca3af"
+            color={glassmorphic ? "#ffffff" : "#9ca3af"}
             className="mr-3"
           />
         )}
         <TextInput
-          className="flex-1 text-gray-800 text-[15px] py-0"
-          placeholderTextColor="#cbd5e1"
+          className={`flex-1 text-[15px] py-0 ${glassmorphic ? 'text-white' : 'text-gray-800'}`}
+          placeholderTextColor={glassmorphic ? "#ffffff80" : "#cbd5e1"}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           {...props}
         />
@@ -56,12 +64,12 @@ export default function InputField({
             <Ionicons
               name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
               size={22}
-              color="#9ca3af"
+              color={glassmorphic ? "#ffffff" : "#9ca3af"}
             />
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text className="text-red-500 text-sm mt-1 ml-1">{error}</Text>}
+      {error && <Text className={`text-sm mt-1 ml-1 ${glassmorphic ? 'text-red-300' : 'text-red-500'}`}>{error}</Text>}
     </View>
   );
 }

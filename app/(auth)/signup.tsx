@@ -1,5 +1,6 @@
 import { useSSO } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -90,8 +91,14 @@ export default function SignUpScreen() {
     }
   };
 
+
   return (
-    <View className="flex-1 bg-[#FAFAFA]">
+    <LinearGradient
+      colors={['#FF5ACD', '#BB65FF', '#4BB1FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      className="flex-1"
+    >
       <SafeScreen>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -104,126 +111,123 @@ export default function SignUpScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={["#FFB347"]}
-                tintColor="#FFB347"
+                colors={["#fff"]}
+                tintColor="#fff"
               />
             }
           >
-            <View className="px-8 pt-12 pb-10">
+            <View className="flex-1 px-6 justify-center py-20">
               {/* Header Section */}
-              <View className="mb-10">
-                <Text className="text-[#1A1A1A] text-3xl font-bold mb-2">
-                  Sign Up Account
-                </Text>
-                <Text className="text-gray-400 text-base">
-                  Hello, Welcome back to our account!
+              <View className="items-center mb-12">
+                <Text className="text-white text-[45px] font-black tracking-tighter text-center leading-[50px]">
+                  Let's make{"\n"}your snaps say{"\n"}more ✨
                 </Text>
               </View>
 
               {/* Form Section */}
-              <View>
-                <Controller
-                  control={control}
-                  name="fullName"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Full Name"
-                      placeholder="Shariar Hossain"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.fullName?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Email"
-                      placeholder="uixshariar@gmail.com"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.email?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="password"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Create Password"
-                      placeholder="**********"
-                      secureTextEntry
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.password?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="confirmPassword"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Confirm Password"
-                      placeholder="**********"
-                      secureTextEntry
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.confirmPassword?.message}
-                    />
-                  )}
-                />
-
-                <CustomButton
-                  title="Sign Up"
-                  onPress={handleSubmit(onSignUp)}
-                  loading={loading}
-                  variant="orange"
-                  className="mt-4"
-                />
-
-                <View className="flex-row items-center my-8">
-                  <View className="flex-1 h-[1px] bg-gray-200" />
-                  <Text className="mx-4 text-gray-400 font-medium">
-                    Or Sign Up With
-                  </Text>
-                  <View className="flex-1 h-[1px] bg-gray-200" />
-                </View>
-
-                {/* Social Login Buttons */}
-                <View className="flex-row gap-4">
-                  <SocialButton
-                    type="facebook"
-                    onPress={() => handleSSO("oauth_facebook" as any)}
+              <View className="bg-white/10 p-2 rounded-[40px] border border-white/20 backdrop-blur-3xl overflow-hidden shadow-2xl">
+                <View className="p-4">
+                  <Controller
+                    control={control}
+                    name="fullName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Full Name"
+                        iconName="person-outline"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.fullName?.message}
+                        showLabel={false}
+                      />
+                    )}
                   />
+
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Email"
+                        iconName="mail-outline"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.email?.message}
+                        showLabel={false}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Create Password"
+                        iconName="lock-closed-outline"
+                        secureTextEntry
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.password?.message}
+                        showLabel={false}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Confirm Password"
+                        iconName="lock-closed-outline"
+                        secureTextEntry
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.confirmPassword?.message}
+                        showLabel={false}
+                      />
+                    )}
+                  />
+
+                  <CustomButton
+                    title="Create Account"
+                    onPress={handleSubmit(onSignUp)}
+                    loading={loading}
+                    variant="primary"
+                    className="mt-4"
+                  />
+
+                  <View className="flex-row items-center my-6">
+                    <View className="flex-1 h-[1px] bg-white/20" />
+                    <Text className="mx-4 text-white/50 font-medium">or</Text>
+                    <View className="flex-1 h-[1px] bg-white/20" />
+                  </View>
+
+                  {/* Social Login Buttons */}
                   <SocialButton
                     type="google"
                     onPress={() => handleSSO("oauth_google")}
+                  />
+                  <SocialButton
+                    type="apple"
+                    onPress={() => {}}
                   />
                 </View>
               </View>
 
               {/* Footer Section */}
-              <View className="flex-row justify-center mt-12">
-                <Text className="text-gray-400 text-[15px]">
-                  Already have an account?{" "}
-                </Text>
+              <View className="flex-row justify-center mt-8">
+                <Text className="text-white/70 text-base">Already have an account? </Text>
                 <TouchableOpacity
                   onPress={() => router.push("/(auth)/login" as any)}
                 >
-                  <Text className="text-[#FFB347] font-bold text-[15px]">
+                  <Text className="text-white font-bold text-base underline decoration-white">
                     Sign In
                   </Text>
                 </TouchableOpacity>
@@ -232,6 +236,6 @@ export default function SignUpScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeScreen>
-    </View>
+    </LinearGradient>
   );
 }
