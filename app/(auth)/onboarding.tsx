@@ -18,6 +18,11 @@ import Animated, {
 import { PAGES } from "../../constants/questions";
 import { useAuth } from "../../context/AuthContext";
 import SafeScreen from "../component/SafeScreen";
+import { useSummarizePersonality } from "../../hooks/useSummarizePersonality";
+import { ActivityIndicator } from "react-native";
+import { Colors } from "../../constants/Colors";
+import { useAppTheme } from "../../context/ThemeContext";
+
 
 const { width } = Dimensions.get("window");
 
@@ -25,9 +30,16 @@ export default function OnboardingScreen() {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showSummary, setShowSummary] = useState(false);
+  const [personalityText, setPersonalityText] = useState<string | null>(null);
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  
   const { setIsOnboarded } = useAuth();
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useNotification();
+  const { isDark } = useAppTheme();
+
+  const { mutate: summarizePersonality, isPending: isSummarizing } = useSummarizePersonality();
 
   const currentPage = PAGES[currentPageIndex];
 
@@ -62,7 +74,81 @@ export default function OnboardingScreen() {
       setCurrentPageIndex((prev) => prev + 1);
     } else {
       setShowSummary(true);
+      handleGenerateSummary();
     }
+  };
+
+  const handleGenerateSummary = () => {
+    const descriptiveAnswers = PAGES.flatMap((p) => p.questions).map((q) => ({
+      question: q.question,
+      answer: getSelectedLabel(q.field, answers[q.field]),
+    }));
+
+    const prompt = `You are a personality summarization assistant.
+
+You will receive a JSON object containing a list of personality-related questions and the user’s answers.
+
+Your task:
+
+Analyze the questions and answers as signals of the user’s personality, preferences, mindset, and behavior.
+
+Generate:
+
+One concise, friendly sentence that describes the person in a natural, human tone.
+
+Exactly 3 relevant hashtags that best represent the person.
+
+Rules:
+
+Do not mention questions, forms, or surveys.
+
+Do not repeat the answers verbatim.
+
+Do not use emojis.
+
+Keep the tone aligned with a modern consumer app (warm, confident, and relatable).
+
+The output must be short and UI-ready.
+
+JSON Data:
+${JSON.stringify(descriptiveAnswers, null, 2)}
+
+Return the response in JSON format with keys 'sentence' and 'hashtags'.`;
+
+    setGenerationError(null);
+    summarizePersonality(
+      { answers, prompt },
+      {
+        onSuccess: (data) => {
+          console.log("Personality Summarization Success:", data);
+          try {
+            const resultRaw = data.summary || (data as any).caption || "";
+            let parsed;
+            if (typeof resultRaw === 'string') {
+              const jsonMatch = resultRaw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+              const cleaned = jsonMatch ? jsonMatch[1].trim() : resultRaw.trim();
+              parsed = JSON.parse(cleaned);
+            } else {
+              parsed = resultRaw;
+            }
+            
+            setPersonalityText(parsed.sentence || parsed.summary || parsed.caption || (typeof resultRaw === 'string' ? resultRaw : ""));
+            setHashtags(parsed.hashtags || []);
+            showSuccess("Personality profile generated!");
+          } catch (e) {
+            console.error("Failed to parse summary", e);
+            // Fallback if parsing fails but there is a string
+            const fallbackText = typeof data.summary === 'string' ? data.summary : "You are a unique individual with a fascinating personality!";
+            setPersonalityText(fallbackText);
+          }
+        },
+        onError: (err) => {
+          console.error("Personality Summarization Error:", err);
+          setGenerationError(err.message || "Something went wrong while generating your profile.");
+          showError("Failed to generate summary: " + err.message);
+        }
+      }
+    );
   };
 
   const handleBack = () => {
@@ -140,36 +226,71 @@ export default function OnboardingScreen() {
             {showSummary ? (
               <Animated.View entering={FadeInRight.duration(400)} key="summary">
                 <Text className="text-white/60 text-lg mb-2">
-                  Summary review ✨
+                  Personality Insights ✨
                 </Text>
                 <Text className="text-white text-3xl font-black mb-8">
-                  Your Profile
+                  The Real You
                 </Text>
 
-                {PAGES.flatMap((p) => p.questions).map((q, idx) => (
-                  <View
-                    key={q.id}
-                    className="mb-4 bg-white/5 p-5 rounded-[32px] border border-white/10"
-                  >
-                    <Text className="text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">
-                      Question {idx + 1}
+                {isSummarizing ? (
+                  <View className="bg-white/5 p-10 rounded-[40px] border border-white/10 items-center justify-center">
+                    <ActivityIndicator size="large" color="white" />
+                    <Text className="text-white/70 font-bold mt-6 text-center">
+                      Analyzing your unique vibe...
                     </Text>
-                    <Text className="text-white text-lg font-bold mb-3">
-                      {q.question}
-                    </Text>
-                    <View className="bg-indigo-500/20 px-4 py-3 rounded-2xl border border-indigo-400/30 flex-row items-center">
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={18}
-                        color="#818cf8"
-                        className="mr-2"
-                      />
-                      <Text className="text-indigo-100 font-medium ml-2">
-                        {getSelectedLabel(q.field, answers[q.field])}
-                      </Text>
-                    </View>
                   </View>
-                ))}
+                ) : generationError ? (
+                  <View className="bg-red-500/10 backdrop-blur-xl p-8 rounded-[40px] border border-red-500/20 items-center">
+                    <Ionicons name="alert-circle" size={48} color="#f87171" />
+                    <Text className="text-white text-xl font-bold mt-4 text-center">
+                      Snap! Something went wrong
+                    </Text>
+                    <Text className="text-red-200/70 mt-2 text-center mb-6">
+                      {generationError}
+                    </Text>
+                    <TouchableOpacity 
+                      onPress={handleGenerateSummary}
+                      className="bg-red-500/20 px-6 py-3 rounded-2xl border border-red-400/30 flex-row items-center"
+                    >
+                      <Ionicons name="refresh" size={18} color="white" />
+                      <Text className="text-white font-bold ml-2">Try Again</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <Animated.View 
+                    entering={FadeInRight.delay(200)}
+                    className="bg-white/10 backdrop-blur-xl p-8 rounded-[40px] border border-white/20 shadow-2xl"
+                  >
+                    <View className="w-16 h-16 bg-indigo-500/30 rounded-3xl items-center justify-center mb-6">
+                      <Ionicons name="sparkles" size={32} color="white" />
+                    </View>
+                    
+                    <Text className="text-white text-2xl font-bold leading-tight mb-6">
+                      {personalityText || "Generated profile will appear here."}
+                    </Text>
+
+                    {hashtags.length > 0 && (
+                      <View className="flex-row flex-wrap gap-2">
+                        {hashtags.map((tag, idx) => (
+                          <View
+                            key={idx}
+                            className="bg-white/20 px-4 py-2 rounded-2xl border border-white/10"
+                          >
+                            <Text className="text-white font-black text-xs uppercase">
+                              #{tag.replace("#", "")}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </Animated.View>
+                )}
+                
+                <View className="mt-8 px-2">
+                  <Text className="text-white/40 text-sm font-medium italic">
+                    Based on your onboarding responses. You can always retake the quiz to refine your profile.
+                  </Text>
+                </View>
               </Animated.View>
             ) : (
               <Animated.View
@@ -260,9 +381,10 @@ export default function OnboardingScreen() {
             )}
             <TouchableOpacity
               onPress={showSummary ? handleFinish : handleNext}
-              className={`${showSummary ? "flex-1" : "w-full"} bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row`}
+              disabled={showSummary && (isSummarizing || hashtags.length === 0)}
+              className={`${showSummary ? "flex-1" : "w-full"} ${showSummary && (isSummarizing || hashtags.length === 0) ? "bg-white/20" : "bg-white"} h-16 rounded-3xl items-center justify-center shadow-xl flex-row`}
             >
-              <Text className="text-indigo-900 text-lg font-bold mr-2">
+              <Text className={`${showSummary && (isSummarizing || hashtags.length === 0) ? "text-white/40" : "text-indigo-900"} text-lg font-bold mr-2`}>
                 {showSummary
                   ? "Get Started"
                   : currentPageIndex === PAGES.length - 1
@@ -278,7 +400,7 @@ export default function OnboardingScreen() {
                       : "arrow-forward"
                 }
                 size={20}
-                color="#312e81"
+                color={showSummary && (isSummarizing || hashtags.length === 0) ? "rgba(255,255,255,0.4)" : "#312e81"}
               />
             </TouchableOpacity>
           </View>
