@@ -24,7 +24,7 @@ export const useGenerateCaption = () => {
 
       const formData = new FormData();
 
-      formData.append("file", {
+      formData.append("image", {
         uri: selectedImage,
         name: selectedImage.split("/").pop() || "image.jpg",
         type: "image/jpeg",
@@ -35,7 +35,7 @@ export const useGenerateCaption = () => {
       try {
         const response = await axios.post(
           // process.env.EXPO_PUBLIC_API_URL ||
-          "http://10.193.198.40:5000/api/generate-caption",
+          "http://Snapsaystest.Sublimitysoft.Com/api/generate-caption",
           formData,
           {
             headers: {
