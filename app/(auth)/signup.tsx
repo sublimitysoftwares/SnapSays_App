@@ -1,5 +1,6 @@
-import { useSSO } from "@clerk/clerk-expo";
+import { useAuth as useClerkAuth, useSignUp, useSSO } from "@clerk/clerk-expo";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -17,6 +18,7 @@ import * as z from "zod";
 import CustomButton from "../../components/CustomButton";
 import InputField from "../../components/InputField";
 import SocialButton from "../../components/SocialButton";
+import { useAuth } from "../../context/AuthContext";
 import SafeScreen from "../component/SafeScreen";
 
 const signupSchema = z
@@ -35,9 +37,14 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { isLoaded, signUp, setActive } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const { isSignedIn: isClerkSignedIn } = useClerkAuth();
+  const { setIsSignedIn, isOnboarded } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState("");
 
   const {
     control,
@@ -62,29 +69,87 @@ export default function SignUpScreen() {
     }, 2000);
   }, [reset]);
 
-  const onSignUp = (data: SignupFormData) => {
+  const onSignUp = async (data: SignupFormData) => {
+    if (!isLoaded) return;
     setLoading(true);
-    console.log("Signup data:", data);
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      await signUp.create({
+        emailAddress: data.email,
+        password: data.password,
+        firstName: data.fullName.split(" ")[0],
+        lastName: data.fullName.split(" ").slice(1).join(" "),
+      });
+
+      // Send verification code
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setPendingVerification(true);
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2));
+      alert(err.errors?.[0]?.message || "Signup failed");
+    } finally {
       setLoading(false);
-      router.replace("/(auth)/onboarding");
-    }, 1500);
+    }
+  };
+
+  const onPressVerify = async () => {
+    if (!isLoaded) return;
+    setLoading(true);
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+
+      if (completeSignUp.status === "complete") {
+        await setActive({ session: completeSignUp.createdSessionId });
+        setIsSignedIn(true);
+        const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
+        router.replace(destination as any);
+      } else {
+        console.error(JSON.stringify(completeSignUp, null, 2));
+      }
+    } catch (err: any) {
+      console.error(JSON.stringify(err, null, 2));
+      alert(err.errors?.[0]?.message || "Verification failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSSO = async (strategy: "oauth_google" | "oauth_facebook") => {
+    const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
+
+    if (isClerkSignedIn) {
+      setIsSignedIn(true);
+      router.replace(destination as any);
+      return;
+    }
+
     try {
       setLoading(true);
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
         strategy: strategy,
+        redirectUrl: Linking.createURL("/sso-callback"),
       });
 
       if (createdSessionId) {
-        await setActive!({ session: createdSessionId });
-        router.replace("/(auth)/onboarding");
+        await setSSOActive!({ session: createdSessionId });
+        setIsSignedIn(true);
+        router.replace(destination as any);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      console.error("SSO error:", error);
+      const errorMessage = error.errors?.[0]?.message || "";
+      if (
+        errorMessage.includes("signed in") ||
+        error.errors?.[0]?.code === "active_session_found"
+      ) {
+        setIsSignedIn(true);
+        router.replace(destination as any);
+      } else {
+        alert(errorMessage || "Social login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -121,99 +186,118 @@ export default function SignUpScreen() {
               </View>
 
               {/* Form Section */}
-              <View>
-                <Controller
-                  control={control}
-                  name="fullName"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Full Name"
-                      placeholder="Shariar Hossain"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.fullName?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Email"
-                      placeholder="uixshariar@gmail.com"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.email?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="password"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Create Password"
-                      placeholder="**********"
-                      secureTextEntry
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.password?.message}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="confirmPassword"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Confirm Password"
-                      placeholder="**********"
-                      secureTextEntry
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.confirmPassword?.message}
-                    />
-                  )}
-                />
-
-                <CustomButton
-                  title="Sign Up"
-                  onPress={handleSubmit(onSignUp)}
-                  loading={loading}
-                  variant="orange"
-                  className="mt-4"
-                />
-
-                <View className="flex-row items-center my-8">
-                  <View className="flex-1 h-[1px] bg-gray-200" />
-                  <Text className="mx-4 text-gray-400 font-medium">
-                    Or Sign Up With
-                  </Text>
-                  <View className="flex-1 h-[1px] bg-gray-200" />
-                </View>
-
-                {/* Social Login Buttons */}
-                <View className="flex-row gap-4">
-                  <SocialButton
-                    type="facebook"
-                    onPress={() => handleSSO("oauth_facebook" as any)}
+              {!pendingVerification ? (
+                <View>
+                  <Controller
+                    control={control}
+                    name="fullName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Full Name"
+                        placeholder="Shariar Hossain"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.fullName?.message}
+                      />
+                    )}
                   />
-                  <SocialButton
-                    type="google"
-                    onPress={() => handleSSO("oauth_google")}
+
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Email"
+                        placeholder="uixshariar@gmail.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.email?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Create Password"
+                        placeholder="**********"
+                        secureTextEntry
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.password?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Confirm Password"
+                        placeholder="**********"
+                        secureTextEntry
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.confirmPassword?.message}
+                      />
+                    )}
+                  />
+
+                  <CustomButton
+                    title="Sign Up"
+                    onPress={handleSubmit(onSignUp)}
+                    loading={loading}
+                    variant="orange"
+                    className="mt-4"
+                  />
+
+                  <View className="flex-row items-center my-8">
+                    <View className="flex-1 h-[1px] bg-gray-200" />
+                    <Text className="mx-4 text-gray-400 font-medium">
+                      Or Sign Up With
+                    </Text>
+                    <View className="flex-1 h-[1px] bg-gray-200" />
+                  </View>
+
+                  {/* Social Login Buttons */}
+                  <View className="flex-row gap-4">
+                    <SocialButton
+                      type="facebook"
+                      onPress={() => handleSSO("oauth_facebook")}
+                    />
+                    <SocialButton
+                      type="google"
+                      onPress={() => handleSSO("oauth_google")}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <InputField
+                    label="Verification Code"
+                    placeholder="123456"
+                    keyboardType="number-pad"
+                    onChangeText={setCode}
+                    value={code}
+                  />
+                  <CustomButton
+                    title="Verify Email"
+                    onPress={onPressVerify}
+                    loading={loading}
+                    variant="orange"
+                    className="mt-4"
                   />
                 </View>
-              </View>
+              )}
 
               {/* Footer Section */}
               <View className="flex-row justify-center mt-12">

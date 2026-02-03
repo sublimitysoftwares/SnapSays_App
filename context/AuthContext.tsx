@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as SecureStore from "expo-secure-store";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
   isSignedIn: boolean;
@@ -10,19 +11,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ONBOARDING_KEY = "snapsays_onboarded";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate checking for a stored token
     const checkAuth = async () => {
       try {
-        // Here you would check for a token and onboarding status in SecureStore or AsyncStorage
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsSignedIn(false);
-        setIsOnboarded(false); // Default to not onboarded
+        const onboarded = await SecureStore.getItemAsync(ONBOARDING_KEY);
+        setIsOnboarded(onboarded === "true");
       } catch (e) {
         console.error("Failed to check auth state", e);
       } finally {
@@ -33,8 +33,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, []);
 
+  const handleSetIsOnboarded = async (value: boolean) => {
+    try {
+      await SecureStore.setItemAsync(ONBOARDING_KEY, value ? "true" : "false");
+      setIsOnboarded(value);
+    } catch (e) {
+      console.error("Failed to save onboarding state", e);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isSignedIn, setIsSignedIn, isOnboarded, setIsOnboarded, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        isSignedIn,
+        setIsSignedIn,
+        isOnboarded,
+        setIsOnboarded: handleSetIsOnboarded,
+        isLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -43,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

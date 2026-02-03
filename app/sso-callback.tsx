@@ -1,7 +1,6 @@
-import React from "react";
 import { ActivityIndicator, View } from "react-native";
 
-export default function Index() {
+export default function SSOCallback() {
   return (
     <View
       style={{

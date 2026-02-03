@@ -13,12 +13,13 @@ import {
 } from "react-native";
 import * as z from "zod";
 
+import { useAuth as useClerkAuth, useSignIn, useSSO } from "@clerk/clerk-expo";
+import * as Linking from "expo-linking";
 import CustomButton from "../../components/CustomButton";
 import InputField from "../../components/InputField";
 import SocialButton from "../../components/SocialButton";
-import SafeScreen from "../component/SafeScreen";
-
 import { useAuth } from "../../context/AuthContext";
+import SafeScreen from "../component/SafeScreen";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -29,7 +30,10 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { setIsSignedIn } = useAuth();
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const { startSSOFlow } = useSSO();
+  const { isSignedIn: isClerkSignedIn } = useClerkAuth();
+  const { setIsSignedIn, isOnboarded } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,16 +58,68 @@ export default function LoginScreen() {
     }, 2000);
   }, [reset]);
 
-  const onLogin = (data: LoginFormData) => {
+  const onLogin = async (data: LoginFormData) => {
+    if (!isLoaded) return;
+
     setLoading(true);
-    console.log("Login data:", data);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const result = await signIn.create({
+        identifier: data.email,
+        password: data.password,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        setIsSignedIn(true);
+        const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
+        router.replace(destination as any);
+      } else {
+        console.log("Login incomplete:", result);
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      alert(error.errors?.[0]?.message || "Login failed");
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSSO = async (strategy: "oauth_google" | "oauth_facebook") => {
+    const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
+
+    if (isClerkSignedIn) {
       setIsSignedIn(true);
-      // Navigate to onboarding screen after successful login
-      router.replace("/(auth)/onboarding" as any);
-    }, 1500);
+      router.replace(destination as any);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
+        strategy: strategy,
+        redirectUrl: Linking.createURL("/sso-callback"),
+      });
+
+      if (createdSessionId) {
+        await setSSOActive!({ session: createdSessionId });
+        setIsSignedIn(true);
+        router.replace(destination as any);
+      }
+    } catch (error: any) {
+      console.error("SSO error:", error);
+      const errorMessage = error.errors?.[0]?.message || "";
+      if (
+        errorMessage.includes("signed in") ||
+        error.errors?.[0]?.code === "active_session_found"
+      ) {
+        setIsSignedIn(true);
+        router.replace(destination as any);
+      } else {
+        alert(errorMessage || "Social login failed");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -154,8 +210,14 @@ export default function LoginScreen() {
 
                 {/* Social Login Buttons */}
                 <View className="flex-row gap-4">
-                  <SocialButton type="facebook" onPress={() => {}} />
-                  <SocialButton type="google" onPress={() => {}} />
+                  <SocialButton
+                    type="facebook"
+                    onPress={() => handleSSO("oauth_facebook")}
+                  />
+                  <SocialButton
+                    type="google"
+                    onPress={() => handleSSO("oauth_google")}
+                  />
                 </View>
               </View>
 

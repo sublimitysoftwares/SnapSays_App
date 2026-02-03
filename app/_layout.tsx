@@ -8,9 +8,13 @@ import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "../context/AuthContext";
+import {
+    AuthProvider,
+    useAuth as useAuthContext,
+} from "../context/AuthContext";
 import { NotificationProvider } from "../context/NotificationContext";
 import { ThemeProvider, useAppTheme } from "../context/ThemeContext";
+import { useAuthGuard } from "../hooks/useAuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -45,9 +49,19 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function InitialLayout() {
-  const { isLoaded } = useAuth();
+  const { isLoaded, isSignedIn: isClerkSignedIn } = useAuth();
+  const { setIsSignedIn, isLoading: isAuthLoading } = useAuthContext();
 
-  if (!isLoaded) {
+  // Custom hook to handle redirection logic
+  useAuthGuard();
+
+  React.useEffect(() => {
+    if (isLoaded) {
+      setIsSignedIn(!!isClerkSignedIn);
+    }
+  }, [isLoaded, isClerkSignedIn, setIsSignedIn]);
+
+  if (!isLoaded || isAuthLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#4f46e5" />
