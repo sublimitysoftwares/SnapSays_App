@@ -1,6 +1,7 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { useRouter } from "expo-router";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Switch } from "react-native-paper";
 import { Colors } from "../../constants/Colors";
@@ -8,6 +9,7 @@ import { useAuth as useAuthContext } from "../../context/AuthContext";
 import { useAppTheme } from "../../context/ThemeContext";
 
 const Profile = () => {
+  const router = useRouter();
   const { user } = useUser();
   const { signOut } = useAuth();
   const { setIsSignedIn } = useAuthContext();
@@ -99,6 +101,31 @@ const Profile = () => {
             Drafts
           </Text>
         </View>
+      </View>
+
+      {/* Personality Analysis Button */}
+      <View className="mt-8 px-6 mx-6">
+        <TouchableOpacity
+          onPress={() => router.push("/personality-results")}
+          className="flex-row items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-3xl border border-indigo-100 dark:border-indigo-800"
+        >
+          <View className="flex-row items-center">
+            <View className="w-12 h-12 rounded-2xl items-center justify-center mr-4 bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-800/50">
+              <Ionicons name="sparkles" size={24} color="#6366f1" />
+            </View>
+            <View>
+              <Text className="text-gray-800 dark:text-slate-100 text-lg font-bold">
+                Personality Analysis
+              </Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+                View your results
+              </Text>
+            </View>
+          </View>
+          <View className="bg-white dark:bg-slate-800 p-2 rounded-full">
+            <Ionicons name="chevron-forward" size={18} color="#6366f1" />
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Theme Toggle Section */}

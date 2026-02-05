@@ -24,6 +24,7 @@ import { API_CONFIG } from "../../constants/Config";
 import { useAuth } from "../../context/AuthContext";
 import { useNotification } from "../../context/NotificationContext";
 import { useAppTheme } from "../../context/ThemeContext";
+import { useSummarizePersonality } from "../../hooks/useSummarizePersonality";
 import "../global.css";
 
 export default function RemoveBgScreen() {
@@ -38,6 +39,35 @@ export default function RemoveBgScreen() {
   const [isBgLoading, setIsBgLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  
+  const { mutate: summarizePersonality, isPending: isRefining } = useSummarizePersonality();
+
+  const handleRefinePrompt = () => {
+    if (!bgDescription.trim()) {
+      showInfo("Please enter some text to refine!");
+      return;
+    }
+
+    summarizePersonality(
+      {
+        answers: {},
+        prompt: `${bgDescription}. Make this data into a better prompt (not more than 3-4 line).`,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.summary) {
+            setBgDescription(data.summary);
+            showSuccess("Prompt refined! ✨");
+          } else {
+            showError("Could not refine prompt.");
+          }
+        },
+        onError: (error) => {
+          showError(error.message || "Failed to refine prompt");
+        },
+      }
+    );
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -268,14 +298,54 @@ export default function RemoveBgScreen() {
               <Text className="text-gray-600 dark:text-gray-400 font-bold text-xs uppercase mb-2 ml-1">
                 Describe new background
               </Text>
-              <TextInput
-                value={bgDescription}
-                onChangeText={setBgDescription}
-                placeholder="e.g., a luxury office with city view"
-                placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
-                className="bg-gray-50 dark:bg-slate-800 p-4 rounded-xl text-gray-800 dark:text-white border border-gray-100 dark:border-slate-700 mb-4"
-                multiline
-              />
+              <View className="mb-4">
+                <TextInput
+                  value={bgDescription}
+                  onChangeText={setBgDescription}
+                  placeholder="e.g., a luxury office with city view"
+                  placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
+                  className="bg-gray-50 dark:bg-slate-800 p-4 rounded-xl text-gray-800 dark:text-white border border-gray-100 dark:border-slate-700 w-full mb-3"
+                  multiline
+                  style={{ minHeight: 80 }}
+                />
+                <TouchableOpacity
+                  onPress={handleRefinePrompt}
+                  disabled={isRefining || !bgDescription.trim()}
+                  className={`flex-row items-center justify-center py-3 px-4 rounded-xl border ${
+                    isRefining || !bgDescription.trim()
+                      ? "bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700"
+                      : "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800"
+                  }`}
+                >
+                  {isRefining ? (
+                    <ActivityIndicator size="small" color="#6366f1" className="mr-2" />
+                  ) : (
+                    <Ionicons
+                      name="sparkles"
+                      size={18}
+                      color={
+                        !bgDescription.trim()
+                          ? isDark
+                            ? "#475569"
+                            : "#94a3b8"
+                          : "#6366f1"
+                      }
+                      style={{ marginRight: 8 }}
+                    />
+                  )}
+                  <Text
+                    className={`font-bold ${
+                      !bgDescription.trim()
+                        ? isDark
+                          ? "text-slate-600"
+                          : "text-gray-400"
+                        : "text-indigo-600 dark:text-indigo-400"
+                    }`}
+                  >
+                    {isRefining ? "Refining..." : "Refine Prompt"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
                 onPress={handleRemoveBg}

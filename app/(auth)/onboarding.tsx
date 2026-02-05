@@ -16,18 +16,24 @@ import Animated, {
   Layout,
 } from "react-native-reanimated";
 import { PAGES } from "../../constants/questions";
+import { useSummarizePersonality } from "../../hooks/useSummarizePersonality";
 import { useAuth } from "../../context/AuthContext";
 import SafeScreen from "../component/SafeScreen";
+import { ActivityIndicator } from "react-native";
+import { useRef } from "react";
 
 const { width } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
+  const scrollRef = useRef<ScrollView>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showSummary, setShowSummary] = useState(false);
-  const { setIsOnboarded } = useAuth();
+  const { setIsOnboarded, setAnswers: setContextAnswers, setPersonalitySummary, personalitySummary } = useAuth();
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useNotification();
+
+  const { mutate: summarize, isPending: isSummarizing } = useSummarizePersonality();
 
   const currentPage = PAGES[currentPageIndex];
 
@@ -54,24 +60,68 @@ export default function OnboardingScreen() {
     const allAnswered = currentPage.questions.every((q) => answers[q.field]);
 
     if (!allAnswered) {
-      alert("Please answer all questions before moving to the next page.");
+      showError("Please answer all questions before moving to the next page.");
       return;
     }
 
     if (currentPageIndex < PAGES.length - 1) {
       setCurrentPageIndex((prev) => prev + 1);
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
     } else {
-      setShowSummary(true);
+      const prompt = `You are a personality analyst. Based on the user's answers to these 10 questions, create a concise, friendly, and engaging one-sentence description of their personality. Also, provide 3 highly relevant and catchy hashtags.
+      
+      Important:
+      - The sentence should be warm, relatable, and descriptive (max 20 words).
+      - The hashtags should be modern and related to their vibe (e.g., #AdventurousSpirit, #QuietThinker, #LifeOfTheParty).
+      - Format your response as a JSON object with 'summary' and 'hashtags' keys.`;
+
+      summarize(
+        { answers, prompt },
+        {
+          onSuccess: (data) => {
+            console.log("Summarize success:", data);
+            
+            // Handle case where API might return empty or null data despite "success" status
+            if (data && (data.summary || (data.hashtags && data.hashtags.length > 0))) {
+              setPersonalitySummary({
+                summary: data.summary || "You have a unique and interesting personality!",
+                hashtags: data.hashtags || [],
+              });
+              showSuccess("Personality profile generated!");
+            } else {
+              console.warn("API returned success but missing data:", data);
+              setPersonalitySummary(null);
+              showInfo("Complete! Review your answers below.");
+            }
+            
+            setContextAnswers(answers);
+            setShowSummary(true);
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          },
+          onError: (err) => {
+            console.error("Summarize error callback:", err);
+            showError("We couldn't generate your personality summary, but you can still review your answers.");
+            
+            // Gracefully fallback to showing just the answers
+            setPersonalitySummary(null);
+            setContextAnswers(answers);
+            setShowSummary(true);
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          },
+        }
+      );
     }
   };
 
   const handleBack = () => {
     if (showSummary) {
       setShowSummary(false);
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
       return;
     }
     if (currentPageIndex > 0) {
       setCurrentPageIndex((prev) => prev - 1);
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
     }
   };
 
@@ -107,6 +157,8 @@ export default function OnboardingScreen() {
                     setShowSummary(false);
                     setCurrentPageIndex(0);
                     setAnswers({});
+                    setContextAnswers({});
+                    setPersonalitySummary(null);
                   }}
                   className="ml-2 bg-red-500/20 px-3 py-1.5 rounded-full border border-red-400/30 flex-row items-center"
                 >
@@ -134,6 +186,7 @@ export default function OnboardingScreen() {
           </View>
 
           <ScrollView
+            ref={scrollRef}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }}
           >
@@ -142,8 +195,39 @@ export default function OnboardingScreen() {
                 <Text className="text-white/60 text-lg mb-2">
                   Summary review ✨
                 </Text>
-                <Text className="text-white text-3xl font-black mb-8">
+                <Text className="text-white text-3xl font-black mb-6">
                   Your Profile
+                </Text>
+
+                {personalitySummary && (
+                  <View className="mb-8 bg-indigo-500/10 p-6 rounded-[32px] border border-indigo-400/20">
+                    <View className="flex-row items-center mb-3">
+                      <View className="w-8 h-8 bg-indigo-500 rounded-lg items-center justify-center mr-3">
+                        <Ionicons name="sparkles" size={18} color="white" />
+                      </View>
+                      <Text className="text-indigo-200 text-sm font-bold uppercase tracking-wider">
+                        AI Personality Insight
+                      </Text>
+                    </View>
+                    
+                    <Text className="text-white text-xl font-bold italic leading-7 mb-4">
+                      "{personalitySummary.summary}"
+                    </Text>
+                    
+                    <View className="flex-row flex-wrap gap-2">
+                      {personalitySummary.hashtags.map((tag, i) => (
+                        <View key={i} className="bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
+                          <Text className="text-indigo-300 text-xs font-bold">
+                            #{tag.replace(/^#/, "")}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <Text className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4 ml-1">
+                  DETAILED ANSWERS
                 </Text>
 
                 {PAGES.flatMap((p) => p.questions).map((q, idx) => (
@@ -244,6 +328,8 @@ export default function OnboardingScreen() {
                   setShowSummary(false);
                   setCurrentPageIndex(0);
                   setAnswers({});
+                  setContextAnswers({});
+                  setPersonalitySummary(null);
                 }}
                 className="flex-1 bg-white/10 h-16 rounded-3xl items-center justify-center border border-white/20 flex-row"
               >
@@ -260,26 +346,33 @@ export default function OnboardingScreen() {
             )}
             <TouchableOpacity
               onPress={showSummary ? handleFinish : handleNext}
-              className={`${showSummary ? "flex-1" : "w-full"} bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row`}
+              disabled={isSummarizing}
+              className={`${showSummary ? "flex-1" : "w-full"} bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row ${isSummarizing ? "opacity-70" : ""}`}
             >
-              <Text className="text-indigo-900 text-lg font-bold mr-2">
-                {showSummary
-                  ? "Get Started"
-                  : currentPageIndex === PAGES.length - 1
-                    ? "Review"
-                    : "Next"}
-              </Text>
-              <Ionicons
-                name={
-                  showSummary
-                    ? "rocket"
-                    : currentPageIndex === PAGES.length - 1
-                      ? "eye"
-                      : "arrow-forward"
-                }
-                size={20}
-                color="#312e81"
-              />
+              {isSummarizing ? (
+                <ActivityIndicator color="#312e81" />
+              ) : (
+                <>
+                  <Text className="text-indigo-900 text-lg font-bold mr-2">
+                    {showSummary
+                      ? "Get Started"
+                      : currentPageIndex === PAGES.length - 1
+                        ? "Review"
+                        : "Next"}
+                  </Text>
+                  <Ionicons
+                    name={
+                      showSummary
+                        ? "rocket"
+                        : currentPageIndex === PAGES.length - 1
+                          ? "eye"
+                          : "arrow-forward"
+                    }
+                    size={20}
+                    color="#312e81"
+                  />
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </View>
