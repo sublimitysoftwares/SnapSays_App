@@ -24,7 +24,7 @@ export const useGenerateCaption = () => {
 
       const formData = new FormData();
 
-      formData.append("file", {
+      formData.append("image", {
         uri: selectedImage,
         name: selectedImage.split("/").pop() || "image.jpg",
         type: "image/jpeg",
