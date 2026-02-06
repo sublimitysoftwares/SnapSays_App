@@ -1,19 +1,22 @@
 import { useNotification } from "@/context/NotificationContext";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Dimensions,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Animated, {
-  FadeInRight,
-  FadeOutLeft,
-  Layout,
+    FadeInRight,
+    FadeOutLeft,
+    Layout,
 } from "react-native-reanimated";
 import { PAGES } from "../../constants/questions";
 import { useAuth } from "../../context/AuthContext";
@@ -25,7 +28,14 @@ export default function OnboardingScreen() {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showSummary, setShowSummary] = useState(false);
-  const { setIsOnboarded } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const {
+    setIsOnboarded,
+    setIsSignedIn,
+    setUser,
+    pendingUser,
+    setPendingUser,
+  } = useAuth();
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useNotification();
 
@@ -54,7 +64,9 @@ export default function OnboardingScreen() {
     const allAnswered = currentPage.questions.every((q) => answers[q.field]);
 
     if (!allAnswered) {
-      alert("Please answer all questions before moving to the next page.");
+      Alert.alert(
+        "Please answer all questions before moving to the next page.",
+      );
       return;
     }
 
@@ -75,10 +87,67 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleFinish = () => {
-    console.log("Final Answers:", answers);
-    setIsOnboarded(true);
-    router.replace("/(tabs)");
+  const handleFinish = async () => {
+    if (!pendingUser) {
+      Alert.alert(
+        "Error",
+        "Signup information missing. Please restart signup.",
+      );
+      router.replace("/(auth)/signup");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Map answers to required API format
+      const formattedAnswers = PAGES.flatMap((page) =>
+        page.questions.map((q) => {
+          const selectedValue = answers[q.field];
+          const selectedOption = q.options.find(
+            (opt) => opt.value === selectedValue,
+          );
+          return {
+            questionId: q.numericId,
+            optionId: selectedOption?.optionId || 0,
+          };
+        }),
+      );
+
+      const payload = {
+        username: pendingUser.username,
+        password: pendingUser.password,
+        answers: formattedAnswers,
+      };
+
+      const apiUrl =
+        "http://fapindetails.sublimitysoft.com/api/api//Common/SaveUser";
+      const response = await axios.post(apiUrl, payload);
+      const result = response.data;
+
+      if (result.ResponseCode === 200) {
+        showSuccess("Profile created successfully!");
+
+        // Mark as onboarded and signed in
+        await setIsOnboarded(true);
+        await setUser(result.Data || { username: pendingUser.username });
+        await setIsSignedIn(true);
+
+        // Clear pending user
+        setPendingUser(null);
+
+        router.replace("/(tabs)");
+      } else {
+        Alert.alert(
+          "Signup Failed",
+          result.ResponseMessage || "Something went wrong.",
+        );
+      }
+    } catch (error: any) {
+      console.error("Signup API error:", error);
+      Alert.alert("Error", "Failed to save your profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const progress = showSummary ? 1 : (currentPageIndex + 1) / PAGES.length;
@@ -101,7 +170,7 @@ export default function OnboardingScreen() {
                 <Ionicons name="chevron-back" size={24} color="white" />
               </TouchableOpacity>
 
-              {(showSummary || Object.keys(answers).length > 0) && (
+              {(showSummary || Object.keys(answers).length > 0) && !loading && (
                 <TouchableOpacity
                   onPress={() => {
                     setShowSummary(false);
@@ -204,8 +273,10 @@ export default function OnboardingScreen() {
                           <TouchableOpacity
                             key={option.optionId}
                             onPress={() =>
+                              !loading &&
                               handleSelectOption(q.field, option.value)
                             }
+                            disabled={loading}
                             className={`p-5 rounded-3xl border-2 flex-row items-center justify-between ${
                               isSelected
                                 ? "bg-indigo-500/30 border-indigo-400"
@@ -238,7 +309,7 @@ export default function OnboardingScreen() {
 
           {/* Bottom Button */}
           <View className="absolute bottom-10 left-6 right-6 flex-row gap-4">
-            {showSummary && (
+            {showSummary && !loading && (
               <TouchableOpacity
                 onPress={() => {
                   setShowSummary(false);
@@ -260,26 +331,33 @@ export default function OnboardingScreen() {
             )}
             <TouchableOpacity
               onPress={showSummary ? handleFinish : handleNext}
+              disabled={loading}
               className={`${showSummary ? "flex-1" : "w-full"} bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row`}
             >
-              <Text className="text-indigo-900 text-lg font-bold mr-2">
-                {showSummary
-                  ? "Get Started"
-                  : currentPageIndex === PAGES.length - 1
-                    ? "Review"
-                    : "Next"}
-              </Text>
-              <Ionicons
-                name={
-                  showSummary
-                    ? "rocket"
-                    : currentPageIndex === PAGES.length - 1
-                      ? "eye"
-                      : "arrow-forward"
-                }
-                size={20}
-                color="#312e81"
-              />
+              {loading ? (
+                <ActivityIndicator color="#312e81" />
+              ) : (
+                <>
+                  <Text className="text-indigo-900 text-lg font-bold mr-2">
+                    {showSummary
+                      ? "Get Started"
+                      : currentPageIndex === PAGES.length - 1
+                        ? "Review"
+                        : "Next"}
+                  </Text>
+                  <Ionicons
+                    name={
+                      showSummary
+                        ? "rocket"
+                        : currentPageIndex === PAGES.length - 1
+                          ? "eye"
+                          : "arrow-forward"
+                    }
+                    size={20}
+                    color="#312e81"
+                  />
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </View>

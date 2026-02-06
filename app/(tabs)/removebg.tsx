@@ -1,4 +1,3 @@
-import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import * as FileSystem from "expo-file-system/legacy";
@@ -6,17 +5,17 @@ import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import ImageUpload from "../../components/ImageUpload";
 import { Colors } from "../../constants/Colors";
@@ -27,9 +26,7 @@ import { useAppTheme } from "../../context/ThemeContext";
 import "../global.css";
 
 export default function RemoveBgScreen() {
-  const { user, isLoaded } = useUser();
-  const { setIsSignedIn } = useAuth();
-  const { signOut } = useClerkAuth();
+  const { user } = useAuth();
   const { showSuccess, showError, showInfo } = useNotification();
   const { isDark } = useAppTheme();
 
@@ -71,7 +68,7 @@ export default function RemoveBgScreen() {
       [{ resize: { width: newWidth, height: newHeight } }],
       {
         compress: 0.7,
-        format: SaveFormat.JPEG, // ✅ now defined
+        format: SaveFormat.JPEG,
       },
     );
 
@@ -114,7 +111,6 @@ export default function RemoveBgScreen() {
       }
     } catch (error) {
       console.log("Error checking image size:", error);
-      // Optional: Proceed or return. Proceeding might result in API error.
     }
 
     setIsBgLoading(true);
@@ -158,18 +154,7 @@ export default function RemoveBgScreen() {
       setGeneratedImage(watermarkedImage);
       showSuccess("Background replaced successfully! ✨");
     } catch (error: any) {
-      console.error("Axios Error Details:", {
-        message: error.message,
-        code: error.code,
-        config: error.config,
-        response: error.response
-          ? {
-              status: error.response.status,
-              data: error.response.data,
-              headers: error.response.headers,
-            }
-          : "No response",
-      });
+      console.error("Axios Error Details:", error);
       showError(`Error: ${error.message}`);
     } finally {
       setIsBgLoading(false);
@@ -197,8 +182,6 @@ export default function RemoveBgScreen() {
     }
   };
 
-  if (!isLoaded) return null;
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -212,14 +195,13 @@ export default function RemoveBgScreen() {
             Welcome back,
           </Text>
           <Text className="text-xl font-black text-gray-800 dark:text-white">
-            {user?.firstName || "Explorer"} 👋
+            {user?.username || "Explorer"} 👋
           </Text>
         </View>
         <TouchableOpacity className="p-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800">
-          <Image
-            source={{ uri: user?.imageUrl }}
-            className="w-10 h-10 rounded-full"
-          />
+          <View className="w-10 h-10 rounded-full bg-indigo-100 items-center justify-center">
+            <Ionicons name="person" size={20} color="#4f46e5" />
+          </View>
         </TouchableOpacity>
       </View>
 

@@ -1,10 +1,10 @@
-import { useAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TabLayout() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn } = useAuth();
 
   // Wait for auth to load
   // if (!isLoaded) return null;

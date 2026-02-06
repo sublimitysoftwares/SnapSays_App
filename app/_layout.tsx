@@ -1,4 +1,4 @@
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider } from "@clerk/clerk-expo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -9,8 +9,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
-    AuthProvider,
-    useAuth as useAuthContext,
+  AuthProvider,
+  useAuth as useAuthContext,
 } from "../context/AuthContext";
 import { NotificationProvider } from "../context/NotificationContext";
 import { ThemeProvider, useAppTheme } from "../context/ThemeContext";
@@ -49,19 +49,12 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function InitialLayout() {
-  const { isLoaded, isSignedIn: isClerkSignedIn } = useAuth();
-  const { setIsSignedIn, isLoading: isAuthLoading } = useAuthContext();
+  const { isLoading: isAuthLoading } = useAuthContext();
 
   // Custom hook to handle redirection logic
   useAuthGuard();
 
-  React.useEffect(() => {
-    if (isLoaded) {
-      setIsSignedIn(!!isClerkSignedIn);
-    }
-  }, [isLoaded, isClerkSignedIn, setIsSignedIn]);
-
-  if (!isLoaded || isAuthLoading) {
+  if (isAuthLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#4f46e5" />

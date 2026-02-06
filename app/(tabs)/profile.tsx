@@ -1,22 +1,18 @@
-import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Switch } from "react-native-paper";
 import { Colors } from "../../constants/Colors";
 import { useAuth as useAuthContext } from "../../context/AuthContext";
 import { useAppTheme } from "../../context/ThemeContext";
 
 const Profile = () => {
-  const { user } = useUser();
-  const { signOut } = useAuth();
-  const { setIsSignedIn } = useAuthContext();
+  const { user, logout } = useAuthContext();
   const { isDark, toggleTheme } = useAppTheme();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      setIsSignedIn(false);
+      await logout();
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -49,10 +45,9 @@ const Profile = () => {
       <View className="bg-indigo-600 h-48 rounded-b-[40px] items-center justify-center relative shadow-lg">
         <View className="absolute -bottom-16 items-center">
           <View className="p-1 bg-white dark:bg-slate-800 rounded-full shadow-xl">
-            <Image
-              source={{ uri: user.imageUrl }}
-              className="w-32 h-32 rounded-full"
-            />
+            <View className="w-32 h-32 rounded-full bg-indigo-100 items-center justify-center">
+              <Ionicons name="person" size={64} color="#4f46e5" />
+            </View>
           </View>
         </View>
       </View>
@@ -60,10 +55,10 @@ const Profile = () => {
       {/* User Info Section */}
       <View className="mt-20 px-6 items-center">
         <Text className="text-2xl font-black text-gray-800 dark:text-white">
-          {user.fullName || "User"}
+          {user.username || "User"}
         </Text>
         <Text className="text-gray-500 font-medium mt-1 dark:text-gray-400">
-          {user.primaryEmailAddress?.emailAddress}
+          {user.email || "No email provided"}
         </Text>
 
         <TouchableOpacity className="mt-4 bg-indigo-100 dark:bg-indigo-900/30 px-6 py-2 rounded-full border border-indigo-200 dark:border-indigo-800">
@@ -123,35 +118,6 @@ const Profile = () => {
           />
         </View>
       </View>
-
-      {/* Settings Options */}
-      {/* <View className="mt-6 px-6 bg-white dark:bg-slate-900 mx-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 py-2">
-        {profileOptions.map((option, index) => (
-          <React.Fragment key={index}>
-            <TouchableOpacity className="flex-row items-center justify-between py-4 px-2">
-              <View className="flex-row items-center">
-                <View
-                  className="w-10 h-10 rounded-2xl items-center justify-center mr-4"
-                  style={{ backgroundColor: `${option.color}15` }}
-                >
-                  <Ionicons
-                    name={option.icon as any}
-                    size={22}
-                    color={option.color}
-                  />
-                </View>
-                <Text className="text-gray-700 dark:text-slate-200 text-lg font-semibold">
-                  {option.title}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-            </TouchableOpacity>
-            {index < profileOptions.length - 1 && (
-              <Divider className="bg-gray-100 dark:bg-slate-800 mx-2" />
-            )}
-          </React.Fragment>
-        ))}
-      </View> */}
 
       {/* Sign Out Button */}
       <TouchableOpacity

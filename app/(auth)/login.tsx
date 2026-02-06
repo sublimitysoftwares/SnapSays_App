@@ -1,8 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -13,8 +16,8 @@ import {
 } from "react-native";
 import * as z from "zod";
 
-import { useAuth as useClerkAuth, useSignIn, useSSO } from "@clerk/clerk-expo";
-import * as Linking from "expo-linking";
+const APP_LOGO = require("../../assets/images/app_logo.png");
+
 import CustomButton from "../../components/CustomButton";
 import InputField from "../../components/InputField";
 import SocialButton from "../../components/SocialButton";
@@ -22,18 +25,15 @@ import { useAuth } from "../../context/AuthContext";
 import SafeScreen from "../component/SafeScreen";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(3, "Password must be at least 3 characters"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn, setActive, isLoaded } = useSignIn();
-  const { startSSOFlow } = useSSO();
-  const { isSignedIn: isClerkSignedIn } = useClerkAuth();
-  const { setIsSignedIn, isOnboarded } = useAuth();
+  const { setIsSignedIn, setUser, isOnboarded } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -45,7 +45,7 @@ export default function LoginScreen() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -59,67 +59,43 @@ export default function LoginScreen() {
   }, [reset]);
 
   const onLogin = async (data: LoginFormData) => {
-    if (!isLoaded) return;
-
     setLoading(true);
     try {
-      const result = await signIn.create({
-        identifier: data.email,
-        password: data.password,
-      });
+      const apiUrl = `http://fapindetails.sublimitysoft.com/api/api//Common/FetchUser?Username=${encodeURIComponent(
+        data.username,
+      )}&Password=${encodeURIComponent(data.password)}`;
 
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
+      const response = await axios.get(apiUrl);
+      const result = response.data;
+
+      if (result.ResponseCode === 200) {
+        // Success
+        setUser(result.Data);
         setIsSignedIn(true);
+
         const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
         router.replace(destination as any);
       } else {
-        console.log("Login incomplete:", result);
+        Alert.alert(
+          "Login Failed",
+          result.ResponseMessage || "Invalid credentials",
+        );
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      alert(error.errors?.[0]?.message || "Login failed");
+      Alert.alert("Error", "Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSSO = async (strategy: "oauth_google" | "oauth_facebook") => {
-    const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
-
-    if (isClerkSignedIn) {
-      setIsSignedIn(true);
-      router.replace(destination as any);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
-        strategy: strategy,
-        redirectUrl: Linking.createURL("/sso-callback"),
-      });
-
-      if (createdSessionId) {
-        await setSSOActive!({ session: createdSessionId });
-        setIsSignedIn(true);
-        router.replace(destination as any);
-      }
-    } catch (error: any) {
-      console.error("SSO error:", error);
-      const errorMessage = error.errors?.[0]?.message || "";
-      if (
-        errorMessage.includes("signed in") ||
-        error.errors?.[0]?.code === "active_session_found"
-      ) {
-        setIsSignedIn(true);
-        router.replace(destination as any);
-      } else {
-        alert(errorMessage || "Social login failed");
-      }
-    } finally {
-      setLoading(false);
-    }
+    // Keeping SSO placeholders for now, but they might need separate integration if Clerk is removed completely.
+    // For now, let's focus on the main login API.
+    Alert.alert(
+      "Info",
+      `Social login with ${strategy} is not implemented with the custom API yet.`,
+    );
   };
 
   return (
@@ -142,6 +118,15 @@ export default function LoginScreen() {
             }
           >
             <View className="px-8 pt-12 pb-10">
+              {/* Logo Section */}
+              <View className="items-center mb-8">
+                <Image
+                  source={APP_LOGO}
+                  className="w-24 h-24"
+                  resizeMode="contain"
+                />
+              </View>
+
               {/* Header Section */}
               <View className="mb-10">
                 <Text className="text-[#1A1A1A] text-3xl font-bold mb-2">
@@ -156,17 +141,16 @@ export default function LoginScreen() {
               <View>
                 <Controller
                   control={control}
-                  name="email"
+                  name="username"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <InputField
-                      label="Email"
-                      placeholder="name@example.com"
-                      keyboardType="email-address"
+                      label="Username"
+                      placeholder="Enter your username"
                       autoCapitalize="none"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
-                      error={errors.email?.message}
+                      error={errors.username?.message}
                     />
                   )}
                 />

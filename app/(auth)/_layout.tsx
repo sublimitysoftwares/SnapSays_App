@@ -1,7 +1,7 @@
-import { useAuth } from "@clerk/clerk-expo";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AuthLayout() {
   const { isSignedIn } = useAuth();

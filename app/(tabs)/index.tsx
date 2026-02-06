@@ -1,4 +1,3 @@
-import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as ExpoClipboard from "expo-clipboard";
 import * as ExpoHaptics from "expo-haptics";
@@ -6,13 +5,12 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   RefreshControl,
   ScrollView,
   Share,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Chip } from "react-native-paper";
 import ImageUpload from "../../components/ImageUpload";
@@ -28,9 +26,7 @@ import {
 import "../global.css";
 
 export default function Index() {
-  const { user, isLoaded } = useUser();
-  const { setIsSignedIn } = useAuth();
-  const { signOut } = useClerkAuth();
+  const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const { isDark } = useAppTheme();
 
@@ -146,24 +142,23 @@ export default function Index() {
     handleUpload(description);
   };
 
-  if (!isLoaded) return null;
-
   return (
     <View style={{ flex: 1 }} className="bg-white dark:bg-slate-950">
       <View className="bg-white dark:bg-slate-950 px-6 pt-14 pb-4 border-b border-gray-50 dark:border-slate-900 flex-row justify-between items-center">
-        <View>
-          <Text className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-1">
-            Welcome back,
-          </Text>
-          <Text className="text-xl font-black text-gray-800 dark:text-white">
-            {user?.firstName || "Explorer"} 👋
-          </Text>
+        <View className="flex-row items-center">
+          <View>
+            <Text className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-1">
+              Welcome back,
+            </Text>
+            <Text className="text-xl font-black text-gray-800 dark:text-white">
+              {user?.username || "Explorer"} 👋
+            </Text>
+          </View>
         </View>
         <TouchableOpacity className="p-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800">
-          <Image
-            source={{ uri: user?.imageUrl }}
-            className="w-10 h-10 rounded-full"
-          />
+          <View className="w-10 h-10 rounded-full bg-indigo-100 items-center justify-center">
+            <Ionicons name="person" size={20} color="#4f46e5" />
+          </View>
         </TouchableOpacity>
       </View>
 
