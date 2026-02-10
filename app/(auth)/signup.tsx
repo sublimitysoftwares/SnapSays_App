@@ -90,7 +90,7 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#FAFAFA]">
+    <View className="flex-1 bg-slate-950">
       <SafeScreen>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -103,8 +103,8 @@ export default function SignUpScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={["#FFB347"]}
-                tintColor="#FFB347"
+                colors={["#2563EB"]}
+                tintColor="#2563EB"
               />
             }
           >
@@ -120,7 +120,7 @@ export default function SignUpScreen() {
 
               {/* Header Section */}
               <View className="mb-10">
-                <Text className="text-[#1A1A1A] text-3xl font-bold mb-2">
+                <Text className="text-white text-3xl font-bold mb-2">
                   Sign Up Account
                 </Text>
                 <Text className="text-gray-400 text-base">
@@ -141,6 +141,9 @@ export default function SignUpScreen() {
                       onChangeText={onChange}
                       value={value}
                       error={errors.username?.message}
+                      containerClassName="bg-slate-900 border-slate-800"
+                      inputClassName="text-white"
+                      placeholderTextColor="#64748b"
                     />
                   )}
                 />
@@ -157,6 +160,9 @@ export default function SignUpScreen() {
                       onChangeText={onChange}
                       value={value}
                       error={errors.password?.message}
+                      containerClassName="bg-slate-900 border-slate-800"
+                      inputClassName="text-white"
+                      placeholderTextColor="#64748b"
                     />
                   )}
                 />
@@ -173,6 +179,9 @@ export default function SignUpScreen() {
                       onChangeText={onChange}
                       value={value}
                       error={errors.confirmPassword?.message}
+                      containerClassName="bg-slate-900 border-slate-800"
+                      inputClassName="text-white"
+                      placeholderTextColor="#64748b"
                     />
                   )}
                 />
@@ -181,16 +190,16 @@ export default function SignUpScreen() {
                   title="Sign Up"
                   onPress={handleSubmit(onSignUp)}
                   loading={loading}
-                  variant="orange"
+                  variant="blue"
                   className="mt-4"
                 />
 
                 <View className="flex-row items-center my-8">
-                  <View className="flex-1 h-[1px] bg-gray-200" />
-                  <Text className="mx-4 text-gray-400 font-medium">
+                  <View className="flex-1 h-[1px] bg-slate-800" />
+                  <Text className="mx-4 text-gray-500 font-medium">
                     Or Sign Up With
                   </Text>
-                  <View className="flex-1 h-[1px] bg-gray-200" />
+                  <View className="flex-1 h-[1px] bg-slate-800" />
                 </View>
 
                 {/* Social Login Buttons */}
@@ -214,7 +223,7 @@ export default function SignUpScreen() {
                 <TouchableOpacity
                   onPress={() => router.push("/(auth)/login" as any)}
                 >
-                  <Text className="text-[#FFB347] font-bold text-[15px]">
+                  <Text className="text-blue-500 font-bold text-[15px]">
                     Sign In
                   </Text>
                 </TouchableOpacity>

@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-    Text,
-    TextInput,
-    TextInputProps,
-    TouchableOpacity,
-    View,
+  Text,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface InputFieldProps extends TextInputProps {
@@ -21,19 +21,29 @@ export default function InputField({
   error,
   showIcon = false,
   secureTextEntry,
+  containerClassName = "",
+  inputClassName = "",
+  labelClassName = "",
+  placeholderTextColor = "#cbd5e1",
   ...props
-}: InputFieldProps) {
+}: InputFieldProps & {
+  containerClassName?: string;
+  inputClassName?: string;
+  labelClassName?: string;
+}) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   return (
     <View className="mb-4">
-      <Text className="text-gray-400 font-medium mb-1.5 text-base ml-1">
+      <Text
+        className={`text-gray-400 font-medium mb-1.5 text-base ml-1 ${labelClassName}`}
+      >
         {label}
       </Text>
       <View
         className={`flex-row items-center bg-white rounded-full px-5 py-3.5 border ${
           error ? "border-red-500" : "border-gray-100"
-        } shadow-sm`}
+        } shadow-sm ${containerClassName}`}
       >
         {iconName && showIcon && (
           <Ionicons
@@ -44,8 +54,8 @@ export default function InputField({
           />
         )}
         <TextInput
-          className="flex-1 text-gray-800 text-[15px] py-0"
-          placeholderTextColor="#cbd5e1"
+          className={`flex-1 text-gray-800 text-[15px] py-0 ${inputClassName}`}
+          placeholderTextColor={placeholderTextColor}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           {...props}
         />

@@ -6,7 +6,7 @@ interface CustomButtonProps {
   title: string;
   onPress: () => void;
   loading?: boolean;
-  variant?: "primary" | "secondary" | "outline" | "orange";
+  variant?: "primary" | "secondary" | "outline" | "orange" | "blue";
   className?: string;
 }
 
@@ -30,6 +30,14 @@ export default function CustomButton({
     >
       {isOrange ? (
         <View className="py-4 px-6 items-center justify-center bg-[#FFB347]">
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-white font-bold text-lg">{title}</Text>
+          )}
+        </View>
+      ) : variant === "blue" ? (
+        <View className="py-4 px-6 items-center justify-center bg-[#2563EB]">
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (

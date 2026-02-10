@@ -6,9 +6,6 @@ import { useAuth } from "../../context/AuthContext";
 export default function AuthLayout() {
   const { isSignedIn } = useAuth();
 
-  // if (isSignedIn) {
-  //   return <Redirect href={"/"} />;
-  // }
   return (
     <>
       <Stack

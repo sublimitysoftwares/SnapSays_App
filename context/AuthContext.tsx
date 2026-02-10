@@ -40,11 +40,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const [onboarded, userStr, signedIn] = await Promise.all([
-          SecureStore.getItemAsync(ONBOARDING_KEY),
-          SecureStore.getItemAsync(USER_KEY),
-          SecureStore.getItemAsync(SIGNED_IN_KEY),
-        ]);
+        // Add timeout to prevent hanging if SecureStore fails to respond
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("SecureStore timeout")), 2000),
+        );
+
+        const [onboarded, userStr, signedIn] = (await Promise.race([
+          Promise.all([
+            SecureStore.getItemAsync(ONBOARDING_KEY),
+            SecureStore.getItemAsync(USER_KEY),
+            SecureStore.getItemAsync(SIGNED_IN_KEY),
+          ]),
+          timeoutPromise,
+        ])) as [string | null, string | null, string | null];
 
         setIsOnboarded(onboarded === "true");
         setIsSignedInState(signedIn === "true");
@@ -53,6 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         console.error("Failed to check auth state", e);
+        // Ensure state is clean on error
+        setIsOnboarded(false);
+        setIsSignedInState(false);
+        setUserState(null);
       } finally {
         setIsLoading(false);
       }
@@ -62,44 +74,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setIsSignedIn = async (value: boolean) => {
+    setIsSignedInState(value);
     try {
       await SecureStore.setItemAsync(SIGNED_IN_KEY, value ? "true" : "false");
-      setIsSignedInState(value);
     } catch (e) {
       console.error("Failed to save signed in state", e);
     }
   };
 
   const setUser = async (newUser: User | null) => {
+    setUserState(newUser);
     try {
       if (newUser) {
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(newUser));
       } else {
         await SecureStore.deleteItemAsync(USER_KEY);
       }
-      setUserState(newUser);
     } catch (e) {
       console.error("Failed to save user state", e);
     }
   };
 
   const handleSetIsOnboarded = async (value: boolean) => {
+    setIsOnboarded(value);
     try {
       await SecureStore.setItemAsync(ONBOARDING_KEY, value ? "true" : "false");
-      setIsOnboarded(value);
     } catch (e) {
       console.error("Failed to save onboarding state", e);
     }
   };
 
   const logout = async () => {
+    setIsSignedInState(false);
+    setUserState(null);
     try {
       await Promise.all([
         SecureStore.deleteItemAsync(USER_KEY),
         SecureStore.deleteItemAsync(SIGNED_IN_KEY),
       ]);
-      setIsSignedInState(false);
-      setUserState(null);
     } catch (e) {
       console.error("Failed to logout", e);
     }
