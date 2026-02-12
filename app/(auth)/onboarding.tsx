@@ -1,6 +1,7 @@
 import { useNotification } from "@/context/NotificationContext";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -19,9 +20,9 @@ import Animated, {
   FadeOutLeft,
   Layout,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { PAGES } from "../../constants/questions";
 import { useAuth } from "../../context/AuthContext";
-import SafeScreen from "../component/SafeScreen";
 
 const { width } = Dimensions.get("window");
 
@@ -238,266 +239,269 @@ export default function OnboardingScreen() {
   const progress = showSummary ? 1 : (currentPageIndex + 1) / PAGES.length;
 
   return (
-    <View className="flex-1 bg-slate-950">
-      <SafeScreen>
-        {!showQuestions ? (
-          // --- SLIDER VIEW ---
-          <>
-            <View className="flex-row justify-end px-6 pt-2">
-              <TouchableOpacity onPress={handleSkipSlides}>
-                <Text className="text-white/60 font-bold text-sm">Skip</Text>
-              </TouchableOpacity>
-            </View>
-
-            <FlatList
-              ref={flatListRef}
-              data={SLIDES}
-              renderItem={renderSlideItem}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              onMomentumScrollEnd={(e) => {
-                const contentOffsetX = e.nativeEvent.contentOffset.x;
-                const index = Math.round(contentOffsetX / width);
-                setCurrentIndex(index);
-              }}
-            />
-
-            <View className="flex-row justify-center gap-2 mb-8">
-              {SLIDES.map((_, index) => (
-                <View
-                  key={index}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    currentIndex === index
-                      ? "w-8 bg-[#2563EB]"
-                      : "w-2 bg-slate-800"
-                  }`}
-                />
-              ))}
-            </View>
-
-            <View className="px-6 pb-8">
-              <TouchableOpacity
-                onPress={handleSliderNext}
-                className="w-full bg-[#2563EB] h-14 rounded-full items-center justify-center shadow-lg shadow-blue-900/50 flex-row"
-              >
-                <Text className="text-white text-lg font-bold mr-2">
-                  {currentIndex === SLIDES.length - 1
-                    ? "Get Started"
-                    : "Continue"}
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-          </>
-        ) : (
-          // --- QUESTIONNAIRE VIEW ---
-          <View className="flex-1 px-6 py-4">
-            <View className="flex-row items-center justify-between mb-8">
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                  onPress={handleQuestionBack}
-                  className="p-2 rounded-full bg-white/10"
-                >
-                  <Ionicons name="chevron-back" size={24} color="white" />
+    <LinearGradient colors={["#1e1b4b", "#020617"]} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View className="flex-1">
+          {!showQuestions ? (
+            // --- SLIDER VIEW ---
+            <>
+              <View className="flex-row justify-end px-6 pt-2">
+                <TouchableOpacity onPress={handleSkipSlides}>
+                  <Text className="text-white/60 font-bold text-sm">Skip</Text>
                 </TouchableOpacity>
-
-                {(showSummary || Object.keys(answers).length > 0) &&
-                  !loading && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowSummary(false);
-                        setCurrentPageIndex(0);
-                        setAnswers({});
-                      }}
-                      className="ml-2 bg-red-500/20 px-3 py-1.5 rounded-full border border-red-400/30 flex-row items-center"
-                    >
-                      <Ionicons name="refresh" size={14} color="#f87171" />
-                    </TouchableOpacity>
-                  )}
               </View>
 
-              <View className="flex-1 mx-4">
-                <View className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <Animated.View
-                    className="h-full bg-[#2563EB]"
-                    style={{ width: `${progress * 100}%` }}
-                    layout={Layout.springify()}
+              <FlatList
+                ref={flatListRef}
+                data={SLIDES}
+                renderItem={renderSlideItem}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id}
+                onMomentumScrollEnd={(e) => {
+                  const contentOffsetX = e.nativeEvent.contentOffset.x;
+                  const index = Math.round(contentOffsetX / width);
+                  setCurrentIndex(index);
+                }}
+              />
+
+              <View className="flex-row justify-center gap-2 mb-8">
+                {SLIDES.map((_, index) => (
+                  <View
+                    key={index}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      currentIndex === index
+                        ? "w-8 bg-[#2563EB]"
+                        : "w-2 bg-slate-800"
+                    }`}
                   />
-                </View>
+                ))}
               </View>
 
-              <Text className="text-white/60 font-medium">
-                {showSummary
-                  ? "Done"
-                  : `${currentPageIndex + 1}/${PAGES.length}`}
-              </Text>
-            </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 120 }}
-            >
-              {showSummary ? (
-                <Animated.View
-                  entering={FadeInRight.duration(400)}
-                  key="summary"
+              <View className="px-6 pb-8">
+                <TouchableOpacity
+                  onPress={handleSliderNext}
+                  className="w-full bg-[#2563EB] h-14 rounded-full items-center justify-center shadow-lg shadow-blue-900/50 flex-row"
                 >
-                  <Text className="text-white/60 text-lg mb-2">
-                    Summary review ✨
+                  <Text className="text-white text-lg font-bold mr-2">
+                    {currentIndex === SLIDES.length - 1
+                      ? "Get Started"
+                      : "Continue"}
                   </Text>
-                  <Text className="text-white text-3xl font-black mb-8">
-                    Your Profile
-                  </Text>
+                  <Ionicons name="arrow-forward" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            // --- QUESTIONNAIRE VIEW ---
+            <View className="flex-1 px-6 py-4">
+              <View className="flex-row items-center justify-between mb-8">
+                <View className="flex-row items-center">
+                  <TouchableOpacity
+                    onPress={handleQuestionBack}
+                    className="p-2 rounded-full bg-white/10"
+                  >
+                    <Ionicons name="chevron-back" size={24} color="white" />
+                  </TouchableOpacity>
 
-                  {PAGES.flatMap((p) => p.questions).map((q, idx) => (
-                    <View
-                      key={q.id}
-                      className="mb-4 bg-slate-900 p-5 rounded-[32px] border border-slate-800"
-                    >
-                      <Text className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">
-                        Question {idx + 1}
-                      </Text>
-                      <Text className="text-white text-lg font-bold mb-3">
-                        {q.question}
-                      </Text>
-                      <View className="bg-blue-500/10 px-4 py-3 rounded-2xl border border-blue-500/20 flex-row items-center">
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={18}
-                          color="#3b82f6"
-                          className="mr-2"
-                        />
-                        <Text className="text-blue-100 font-medium ml-2">
-                          {getSelectedLabel(q.field, answers[q.field])}
+                  {(showSummary || Object.keys(answers).length > 0) &&
+                    !loading && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowSummary(false);
+                          setCurrentPageIndex(0);
+                          setAnswers({});
+                        }}
+                        className="ml-2 bg-red-500/20 px-3 py-1.5 rounded-full border border-red-400/30 flex-row items-center"
+                      >
+                        <Ionicons name="refresh" size={14} color="#f87171" />
+                      </TouchableOpacity>
+                    )}
+                </View>
+
+                <View className="flex-1 mx-4">
+                  <View className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <Animated.View
+                      className="h-full bg-[#2563EB]"
+                      style={{ width: `${progress * 100}%` }}
+                      layout={Layout.springify()}
+                    />
+                  </View>
+                </View>
+
+                <Text className="text-white/60 font-medium">
+                  {showSummary
+                    ? "Done"
+                    : `${currentPageIndex + 1}/${PAGES.length}`}
+                </Text>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 120 }}
+              >
+                {showSummary ? (
+                  <Animated.View
+                    entering={FadeInRight.duration(400)}
+                    key="summary"
+                  >
+                    <Text className="text-white/60 text-lg mb-2">
+                      Summary review ✨
+                    </Text>
+                    <Text className="text-white text-3xl font-black mb-8">
+                      Your Profile
+                    </Text>
+
+                    {PAGES.flatMap((p) => p.questions).map((q, idx) => (
+                      <View
+                        key={q.id}
+                        className="mb-4 bg-slate-900/50 p-5 rounded-[32px] border border-white/10"
+                      >
+                        <Text className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">
+                          Question {idx + 1}
                         </Text>
-                      </View>
-                    </View>
-                  ))}
-                </Animated.View>
-              ) : (
-                <Animated.View
-                  key={currentPageIndex}
-                  entering={FadeInRight.duration(400).delay(100)}
-                  exiting={FadeOutLeft.duration(400)}
-                >
-                  <Text className="text-white/60 text-lg mb-2">
-                    {currentPage.helperText}
-                  </Text>
-                  <Text className="text-white text-3xl font-black mb-10">
-                    Let's get to know you
-                  </Text>
-
-                  {currentPage.questions.map((q, i) => (
-                    <View key={q.id} className="mb-10">
-                      <View className="flex-row items-start mb-6">
-                        <View className="bg-blue-500/20 px-3 py-1 rounded-full mr-3">
-                          <Text className="text-blue-400 font-bold">
-                            {currentPageIndex * 2 + i + 1}
-                          </Text>
-                        </View>
-                        <Text className="text-white text-xl font-bold flex-1">
+                        <Text className="text-white text-lg font-bold mb-3">
                           {q.question}
                         </Text>
+                        <View className="bg-blue-500/10 px-4 py-3 rounded-2xl border border-blue-500/20 flex-row items-center">
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={18}
+                            color="#3b82f6"
+                            className="mr-2"
+                          />
+                          <Text className="text-blue-100 font-medium ml-2">
+                            {getSelectedLabel(q.field, answers[q.field])}
+                          </Text>
+                        </View>
                       </View>
-
-                      <View className="space-y-4 gap-3">
-                        {q.options.map((option) => {
-                          const isSelected = answers[q.field] === option.value;
-                          return (
-                            <TouchableOpacity
-                              key={option.optionId}
-                              onPress={() =>
-                                !loading &&
-                                handleSelectOption(q.field, option.value)
-                              }
-                              disabled={loading}
-                              className={`p-5 rounded-3xl border-2 flex-row items-center justify-between ${
-                                isSelected
-                                  ? "bg-blue-600 border-blue-500"
-                                  : "bg-slate-900 border-slate-800"
-                              }`}
-                            >
-                              <Text
-                                className={`text-lg font-medium ${isSelected ? "text-white" : "text-slate-300"}`}
-                              >
-                                {option.label}
-                              </Text>
-                              {isSelected && (
-                                <View className="bg-white/20 rounded-full p-1">
-                                  <Ionicons
-                                    name="checkmark"
-                                    size={16}
-                                    color="white"
-                                  />
-                                </View>
-                              )}
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  ))}
-                </Animated.View>
-              )}
-            </ScrollView>
-
-            <View className="absolute bottom-10 left-6 right-6 flex-row gap-4">
-              {showSummary && !loading && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowSummary(false);
-                    setCurrentPageIndex(0);
-                    setAnswers({});
-                  }}
-                  className="flex-1 bg-slate-800 h-16 rounded-3xl items-center justify-center border border-slate-700 flex-row"
-                >
-                  <Ionicons
-                    name="refresh"
-                    size={20}
-                    color="white"
-                    className="mr-2"
-                  />
-                  <Text className="text-white text-lg font-bold ml-2">
-                    Restart
-                  </Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                onPress={showSummary ? handleFinish : handleQuestionNext}
-                disabled={loading}
-                className={`${showSummary ? "flex-1" : "w-full"} bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row`}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#0f172a" />
+                    ))}
+                  </Animated.View>
                 ) : (
-                  <>
-                    <Text className="text-slate-900 text-lg font-bold mr-2">
-                      {showSummary
-                        ? "All Set!"
-                        : currentPageIndex === PAGES.length - 1
-                          ? "Review"
-                          : "Next"}
+                  <Animated.View
+                    key={currentPageIndex}
+                    entering={FadeInRight.duration(400).delay(100)}
+                    exiting={FadeOutLeft.duration(400)}
+                  >
+                    <Text className="text-white/60 text-lg mb-2">
+                      {currentPage.helperText}
                     </Text>
-                    <Ionicons
-                      name={
-                        showSummary
-                          ? "rocket"
-                          : currentPageIndex === PAGES.length - 1
-                            ? "eye"
-                            : "arrow-forward"
-                      }
-                      size={20}
-                      color="#0f172a"
-                    />
-                  </>
+                    <Text className="text-white text-3xl font-black mb-10">
+                      Let's get to know you
+                    </Text>
+
+                    {currentPage.questions.map((q, i) => (
+                      <View key={q.id} className="mb-10">
+                        <View className="flex-row items-start mb-6">
+                          <View className="bg-blue-500/20 px-3 py-1 rounded-full mr-3">
+                            <Text className="text-blue-400 font-bold">
+                              {currentPageIndex * 2 + i + 1}
+                            </Text>
+                          </View>
+                          <Text className="text-white text-xl font-bold flex-1">
+                            {q.question}
+                          </Text>
+                        </View>
+
+                        <View className="space-y-4 gap-3">
+                          {q.options.map((option) => {
+                            const isSelected =
+                              answers[q.field] === option.value;
+                            return (
+                              <TouchableOpacity
+                                key={option.optionId}
+                                onPress={() =>
+                                  !loading &&
+                                  handleSelectOption(q.field, option.value)
+                                }
+                                disabled={loading}
+                                className={`p-5 rounded-3xl border-2 flex-row items-center justify-between ${
+                                  isSelected
+                                    ? "bg-blue-600 border-blue-500"
+                                    : "bg-white/5 border-white/10"
+                                }`}
+                              >
+                                <Text
+                                  className={`text-lg font-medium ${isSelected ? "text-white" : "text-slate-300"}`}
+                                >
+                                  {option.label}
+                                </Text>
+                                {isSelected && (
+                                  <View className="bg-white/20 rounded-full p-1">
+                                    <Ionicons
+                                      name="checkmark"
+                                      size={16}
+                                      color="white"
+                                    />
+                                  </View>
+                                )}
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    ))}
+                  </Animated.View>
                 )}
-              </TouchableOpacity>
+              </ScrollView>
+
+              <View className="absolute bottom-10 left-6 right-6 flex-row gap-4">
+                {showSummary && !loading && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowSummary(false);
+                      setCurrentPageIndex(0);
+                      setAnswers({});
+                    }}
+                    className="flex-1 bg-white/10 h-16 rounded-3xl items-center justify-center border border-white/10 flex-row"
+                  >
+                    <Ionicons
+                      name="refresh"
+                      size={20}
+                      color="white"
+                      className="mr-2"
+                    />
+                    <Text className="text-white text-lg font-bold ml-2">
+                      Restart
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  onPress={showSummary ? handleFinish : handleQuestionNext}
+                  disabled={loading}
+                  className={`${showSummary ? "flex-1" : "w-full"} bg-white h-16 rounded-3xl items-center justify-center shadow-xl flex-row`}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#0f172a" />
+                  ) : (
+                    <>
+                      <Text className="text-slate-900 text-lg font-bold mr-2">
+                        {showSummary
+                          ? "All Set!"
+                          : currentPageIndex === PAGES.length - 1
+                            ? "Review"
+                            : "Next"}
+                      </Text>
+                      <Ionicons
+                        name={
+                          showSummary
+                            ? "rocket"
+                            : currentPageIndex === PAGES.length - 1
+                              ? "eye"
+                              : "arrow-forward"
+                        }
+                        size={20}
+                        color="#0f172a"
+                      />
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        )}
-      </SafeScreen>
-    </View>
+          )}
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

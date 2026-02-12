@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as z from "zod";
 
 import APP_LOGO from "../../assets/images/app_logo.png";
@@ -22,7 +24,6 @@ import CustomButton from "../../components/CustomButton";
 import InputField from "../../components/InputField";
 import SocialButton from "../../components/SocialButton";
 import { useAuth } from "../../context/AuthContext";
-import SafeScreen from "../component/SafeScreen";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -61,7 +62,7 @@ export default function LoginScreen() {
   const onLogin = async (data: LoginFormData) => {
     setLoading(true);
     try {
-      const apiUrl = `http://fapindetails.sublimitysoft.com/api/api//Common/FetchUser?Username=${encodeURIComponent(
+      const apiUrl = `http://fapindetails.sublimitysoft.com/api/api/Common/FetchUser?Username=${encodeURIComponent(
         data.username,
       )}&Password=${encodeURIComponent(data.password)}`;
 
@@ -100,135 +101,137 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-950">
-      <SafeScreen>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
-        >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ flexGrow: 1 }}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={["#2563EB"]}
-                tintColor="#2563EB"
-              />
-            }
+    <LinearGradient colors={["#1e1b4b", "#020617"]} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View className="flex-1">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="flex-1"
           >
-            <View className="px-8 pt-12 pb-10">
-              {/* Logo Section */}
-              <View className="items-center mb-8">
-                <Image
-                  source={APP_LOGO}
-                  className="w-24 h-24"
-                  resizeMode="contain"
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ flexGrow: 1 }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={["#2563EB"]}
+                  tintColor="#2563EB"
                 />
-              </View>
-
-              {/* Header Section */}
-              <View className="mb-10">
-                <Text className="text-white text-3xl font-bold mb-2">
-                  Login Account
-                </Text>
-                <Text className="text-gray-400 text-base">
-                  Hello, Welcome back to our account!
-                </Text>
-              </View>
-
-              {/* Form Section */}
-              <View>
-                <Controller
-                  control={control}
-                  name="username"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Username"
-                      placeholder="Enter your username"
-                      autoCapitalize="none"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.username?.message}
-                      containerClassName="bg-slate-900 border-slate-800"
-                      inputClassName="text-white"
-                      placeholderTextColor="#64748b"
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="password"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <InputField
-                      label="Password"
-                      placeholder="**********"
-                      secureTextEntry
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      error={errors.password?.message}
-                      containerClassName="bg-slate-900 border-slate-800"
-                      inputClassName="text-white"
-                      placeholderTextColor="#64748b"
-                    />
-                  )}
-                />
-
-                <TouchableOpacity className="self-end mb-6">
-                  <Text className="text-gray-400 font-medium">
-                    Forgot Password?
-                  </Text>
-                </TouchableOpacity>
-
-                <CustomButton
-                  title="Sign In"
-                  onPress={handleSubmit(onLogin)}
-                  loading={loading}
-                  variant="blue"
-                />
-
-                <View className="flex-row items-center my-8">
-                  <View className="flex-1 h-[1px] bg-slate-800" />
-                  <Text className="mx-4 text-gray-500 font-medium">
-                    Or Sign In With
-                  </Text>
-                  <View className="flex-1 h-[1px] bg-slate-800" />
-                </View>
-
-                {/* Social Login Buttons */}
-                <View className="flex-row gap-4">
-                  <SocialButton
-                    type="facebook"
-                    onPress={() => handleSSO("oauth_facebook")}
-                  />
-                  <SocialButton
-                    type="google"
-                    onPress={() => handleSSO("oauth_google")}
+              }
+            >
+              <View className="px-8 pt-4 pb-10">
+                {/* Logo Section */}
+                <View className="items-center mb-8">
+                  <Image
+                    source={APP_LOGO}
+                    className="w-24 h-24"
+                    resizeMode="contain"
                   />
                 </View>
-              </View>
 
-              {/* Footer Section */}
-              <View className="flex-row justify-center mt-12">
-                <Text className="text-gray-400 text-[15px]">
-                  Don't have an account?{" "}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(auth)/signup" as any)}
-                >
-                  <Text className="text-blue-500 font-bold text-[15px]">
-                    Sign Up
+                {/* Header Section */}
+                <View className="mb-10">
+                  <Text className="text-white text-3xl font-bold mb-2">
+                    Login Account
                   </Text>
-                </TouchableOpacity>
+                  <Text className="text-gray-400 text-base">
+                    Hello, Welcome back to our account!
+                  </Text>
+                </View>
+
+                {/* Form Section */}
+                <View>
+                  <Controller
+                    control={control}
+                    name="username"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Username"
+                        placeholder="Enter your username"
+                        autoCapitalize="none"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.username?.message}
+                        containerClassName="bg-white/10 border-white/10"
+                        inputClassName="text-white"
+                        placeholderTextColor="#94a3b8"
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <InputField
+                        label="Password"
+                        placeholder="**********"
+                        secureTextEntry
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        error={errors.password?.message}
+                        containerClassName="bg-white/10 border-white/10"
+                        inputClassName="text-white"
+                        placeholderTextColor="#94a3b8"
+                      />
+                    )}
+                  />
+
+                  <TouchableOpacity className="self-end mb-6">
+                    <Text className="text-gray-400 font-medium">
+                      Forgot Password?
+                    </Text>
+                  </TouchableOpacity>
+
+                  <CustomButton
+                    title="Sign In"
+                    onPress={handleSubmit(onLogin)}
+                    loading={loading}
+                    variant="blue"
+                  />
+
+                  <View className="flex-row items-center my-8">
+                    <View className="flex-1 h-[1px] bg-white/10" />
+                    <Text className="mx-4 text-gray-500 font-medium">
+                      Or Sign In With
+                    </Text>
+                    <View className="flex-1 h-[1px] bg-white/10" />
+                  </View>
+
+                  {/* Social Login Buttons */}
+                  <View className="flex-row gap-4">
+                    <SocialButton
+                      type="facebook"
+                      onPress={() => handleSSO("oauth_facebook")}
+                    />
+                    <SocialButton
+                      type="google"
+                      onPress={() => handleSSO("oauth_google")}
+                    />
+                  </View>
+                </View>
+
+                {/* Footer Section */}
+                <View className="flex-row justify-center mt-12">
+                  <Text className="text-gray-400 text-[15px]">
+                    Don't have an account?{" "}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("/(auth)/signup" as any)}
+                  >
+                    <Text className="text-blue-500 font-bold text-[15px]">
+                      Sign Up
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeScreen>
-    </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

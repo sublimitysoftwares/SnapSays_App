@@ -18,25 +18,6 @@ const Profile = () => {
     }
   };
 
-  const profileOptions = [
-    { title: "Edit Profile", icon: "person-outline", color: Colors.light.tint },
-    {
-      title: "Notifications",
-      icon: "notifications-outline",
-      color: Colors.palette.warning,
-    },
-    {
-      title: "Privacy & Security",
-      icon: "shield-checkmark-outline",
-      color: Colors.palette.success,
-    },
-    {
-      title: "Help & Support",
-      icon: "help-circle-outline",
-      color: Colors.light.secondary,
-    },
-  ];
-
   if (!user) return null;
 
   return (
@@ -94,6 +75,59 @@ const Profile = () => {
             Drafts
           </Text>
         </View>
+      </View>
+
+      {/* Personality Details Section */}
+      <View className="mt-10 px-6">
+        <View className="flex-row items-center mb-4">
+          <Text className="text-xl font-black text-gray-800 dark:text-white">
+            Personality Profile
+          </Text>
+          <View className="ml-2 w-8 h-[2px] bg-indigo-500" />
+        </View>
+
+        {user.User_Personality_Details &&
+        user.User_Personality_Details.length > 0 ? (
+          user.User_Personality_Details.map((detail: any, index: number) => (
+            <View
+              key={index}
+              className="bg-white dark:bg-slate-900 p-5 rounded-[28px] mb-4 shadow-sm border border-gray-100 dark:border-slate-800"
+            >
+              <View className="flex-row items-center mb-2">
+                <View className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 items-center justify-center mr-2">
+                  <Text className="text-indigo-600 dark:text-indigo-400 text-[10px] font-bold">
+                    {index + 1}
+                  </Text>
+                </View>
+                <Text className="text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+                  Question
+                </Text>
+              </View>
+
+              <Text className="text-gray-800 dark:text-white font-bold text-sm mb-3">
+                {detail.Question}
+              </Text>
+
+              <View className="bg-indigo-50 dark:bg-indigo-900/20 px-4 py-3 rounded-2xl border border-indigo-100 dark:border-indigo-800 flex-row items-center">
+                <Ionicons name="checkmark-circle" size={16} color="#4f46e5" />
+                <Text className="text-indigo-700 dark:text-indigo-300 font-semibold ml-2 text-xs">
+                  {detail.Answer}
+                </Text>
+              </View>
+            </View>
+          ))
+        ) : (
+          <View className="bg-white dark:bg-slate-900 p-6 rounded-[28px] items-center border border-dashed border-gray-200 dark:border-slate-800">
+            <Ionicons
+              name="information-circle-outline"
+              size={32}
+              color="#94a3b8"
+            />
+            <Text className="text-gray-400 dark:text-gray-500 text-center mt-2 font-medium">
+              No personality details found.
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Theme Toggle Section */}

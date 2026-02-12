@@ -10,7 +10,7 @@ import {
   Share,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Chip } from "react-native-paper";
 import ImageUpload from "../../components/ImageUpload";
@@ -132,15 +132,51 @@ export default function Index() {
     );
   };
 
+  const getPersonalitySummary = () => {
+    if (!user || !user.User_Personality_Details)
+      return "No specific personality profile provided.";
+
+    return user.User_Personality_Details.map(
+      (detail: any) => `- ${detail.Question}: ${detail.Answer}`,
+    ).join("\n");
+  };
+
   const shareToLinkedIn = () => {
-    const description = `You are a professional LinkedIn copywriter and personal brand strategist. Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 LinkedIn posts aligned with their visual presence, professional personality profile, and emotional state. Each post must be ready to publish, vary in tone, and include relevant hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
+    const personality = getPersonalitySummary();
+    const description = `You are a professional LinkedIn copywriter and personal brand strategist. 
+
+USER PERSONALITY PROFILE:
+${personality}
+
+TASK:
+1. Analyze the expression and face sentiment of the person in the image.
+2. Generate exactly 4 LinkedIn posts that align perfectly with their visual presence, the personality profile provided above, and their current emotional state.
+3. Each post must be ready to publish, vary in tone (e.g., authentic, professional, inspirational, storytelling), and include relevant hashtags. 
+
+CRITICAL: Do not explicitly mention the personality questions or answer values. Instead, use them to influence the "voice" and "vibe" of the posts.
+
+Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
     handleUpload(description);
   };
 
   const shareToInstagram = () => {
-    const description = `You are a professional Instagram copywriter and personal brand strategist. Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 Instagram captions aligned with their visual presence, personality profile, and emotional state. Each caption must be ready to post, vary in tone, and include suitable hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
+    const personality = getPersonalitySummary();
+    const description = `You are a professional Instagram copywriter and personal brand strategist.
+
+USER PERSONALITY PROFILE:
+${personality}
+
+TASK:
+1. Analyze the facial expression and overall face sentiment (e.g., calm, confident, playful, etc.).
+2. Generate exactly 4 Instagram captions that align perfectly with their visual presence, the personality profile provided above, and their emotional state.
+3. Each caption must be ready to post, vary in tone, and include suitable hashtags.
+
+CRITICAL: Do not explicitly mention the personality questions or answer values. Instead, use them to influence the "voice" and "vibe" of the captions.
+
+Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
     handleUpload(description);
   };
+  console.log("User Data:", JSON.stringify(user, null, 2));
 
   return (
     <View style={{ flex: 1 }} className="bg-white dark:bg-slate-950">

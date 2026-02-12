@@ -11,7 +11,7 @@ export default function AuthLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "transparent" },
+          contentStyle: { backgroundColor: "#020617" },
         }}
       >
         <Stack.Screen
@@ -33,7 +33,7 @@ export default function AuthLayout() {
           }}
         />
       </Stack>
-      <StatusBar style="dark" />
+      <StatusBar style="light" translucent={true} />
     </>
   );
 }
