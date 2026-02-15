@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import React from "react";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -13,6 +14,10 @@ import {
 import { NotificationProvider } from "../context/NotificationContext";
 import { ThemeProvider, useAppTheme } from "../context/ThemeContext";
 import { useAuthGuard } from "../hooks/useAuthGuard";
+import "./global.css";
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
@@ -26,6 +31,16 @@ function InitialLayout() {
 
   // Custom hook to handle redirection logic
   useAuthGuard();
+
+  useEffect(() => {
+    if (!isAuthLoading) {
+      // Small delay ensures the New Architecture has finished its first layout pass
+      const timer = setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthLoading]);
 
   if (isAuthLoading) {
     return (
