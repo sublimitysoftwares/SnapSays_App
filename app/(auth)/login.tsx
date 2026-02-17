@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -33,7 +34,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { setIsSignedIn, setUser, isOnboarded } = useAuth();
+  const { setIsSignedIn, setUser, setIsOnboarded } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -72,9 +73,17 @@ export default function LoginScreen() {
         // Success
         setUser(result.Data);
         setIsSignedIn(true);
+        // If user logs in successfully, we consider them onboarded for this session/device flow
+        setIsOnboarded(true);
 
-        const destination = isOnboarded ? "/(tabs)" : "/(auth)/onboarding";
-        router.replace(destination as any);
+        if (result.Data.User_Personality_Details) {
+          await AsyncStorage.setItem(
+            "user_personality",
+            JSON.stringify(result.Data.User_Personality_Details),
+          );
+        }
+
+        router.replace("/(tabs)");
       } else {
         Alert.alert(
           "Login Failed",

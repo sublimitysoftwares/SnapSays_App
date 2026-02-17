@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -97,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await Promise.all([
         SecureStore.deleteItemAsync(USER_KEY),
         SecureStore.deleteItemAsync(SIGNED_IN_KEY),
+        AsyncStorage.removeItem("user_personality"),
       ]);
       setIsSignedInState(false);
       setUserState(null);

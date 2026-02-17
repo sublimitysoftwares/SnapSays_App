@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ExpoClipboard from "expo-clipboard";
 import * as ExpoHaptics from "expo-haptics";
 import React, { useCallback, useState } from "react";
@@ -132,13 +133,33 @@ export default function Index() {
     );
   };
 
-  const shareToLinkedIn = () => {
-    const description = `You are a professional LinkedIn copywriter and personal brand strategist. Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 LinkedIn posts aligned with their visual presence, professional personality profile, and emotional state. Each post must be ready to publish, vary in tone, and include relevant hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
+  const getPersonalityKnowledge = async () => {
+    try {
+      const storedPersonality = await AsyncStorage.getItem("user_personality");
+      if (storedPersonality) {
+        const personalityArray = JSON.parse(storedPersonality);
+        return (
+          "User Personality Summary: " +
+          personalityArray
+            .map((item: any) => `${item.Question}: ${item.Answer}`)
+            .join(". ")
+        );
+      }
+    } catch (e) {
+      console.error("Failed to load personality knowledge", e);
+    }
+    return "";
+  };
+
+  const shareToLinkedIn = async () => {
+    const personalityKnowledge = await getPersonalityKnowledge();
+    const description = `You are a professional LinkedIn copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 LinkedIn posts aligned with their visual presence, professional personality profile, and emotional state. Each post must be ready to publish, vary in tone, and include relevant hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'post' and 'hashtags' keys.`;
     handleUpload(description);
   };
 
-  const shareToInstagram = () => {
-    const description = `You are a professional Instagram copywriter and personal brand strategist. Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 Instagram captions aligned with their visual presence, personality profile, and emotional state. Each caption must be ready to post, vary in tone, and include suitable hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
+  const shareToInstagram = async () => {
+    const personalityKnowledge = await getPersonalityKnowledge();
+    const description = `You are a professional Instagram copywriter and personal brand strategist. ${personalityKnowledge} Given an image of a person, first analyze the facial expression and overall face sentiment (for example: calm, confident, thoughtful, playful, intense). Use this emotional insight internally to guide tone, word choice, and message alignment. Generate exactly 4 Instagram captions aligned with their visual presence, personality profile, and emotional state. Each caption must be ready to post, vary in tone, and include suitable hashtags. Do not mention the personality summary, the facial analysis, or the image description directly. Return the response as a JSON array of 4 objects, each with 'caption' and 'hashtags' keys.`;
     handleUpload(description);
   };
 
